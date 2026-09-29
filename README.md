@@ -13,6 +13,9 @@ cannot read any Japanese yet. No dependencies, no build step, no network.
 | Kanji | 99 — meaning, on'yomi, kun'yomi, stroke count, common words |
 | Vocabulary | 735 words in 23 themes |
 | Listening | 35 conversations in the 4 real N5 formats + unlimited numbers/times/dates drill, with audio |
+| Conversations | 10 everyday scenes (shop, restaurant, station, directions, phone…) to read, hear, role-play and quiz |
+| Games | Sentence builder (131 sentences), particle challenge (55), counter match (33), kanji word pairs, 60-second speed round |
+| Listening tests | 5 full 聴解 papers, 24 questions each (7/6/5/6, like the real N5), no question shared between papers — sit alone or inside the full 180-point mock exam |
 | Grammar | 96 points, each with formation rules, examples and a drill |
 | Mock exam | Full N5 paper, 43 questions, generated fresh every time |
 
@@ -26,6 +29,9 @@ cannot read any Japanese yet. No dependencies, no build step, no network.
 
 ## Running it
 
+New here? The app has a built-in guide: **Home → 📖 How to use this app** covers where to
+start, the daily routine, a study plan and how to read your progress.
+
 **On a computer** — download `Nihongo-N5.html` and double-click. That is the whole
 installation. It works with no internet, forever. Progress is saved in that browser's
 local storage, so keep using the same browser and do not clear site data.
@@ -35,6 +41,12 @@ because browsers will not install a local file. Host it (GitHub Pages, or drag t
 onto [Netlify Drop](https://app.netlify.com/drop)), open the address on your phone, then
 use **Add to Home Screen**. You get an app icon, no browser bars, and it keeps working
 offline.
+
+**Back up your progress.** Progress is stored in the browser only, so clearing browser
+data or changing phone erases it. In **Settings → Back up your progress**, tap
+**Save backup file** now and then. To move to another device, send that file to it and
+tap **Restore from a backup file** there. If a device cannot save or pick files, use the
+backup code option underneath instead.
 
 **Audio** is optional and needs a Japanese voice installed on the device. If there is
 none, every audio control hides itself rather than showing a broken button.
@@ -55,7 +67,7 @@ the top of `Nihongo-N5.html`.
 Open the app, press F12, and run:
 
 ```js
-NM.selfTest()   // -> {pass: true, …}  42 checks
+NM.selfTest()   // -> {pass: true, …}  47 checks
 NM.stats()
 ```
 

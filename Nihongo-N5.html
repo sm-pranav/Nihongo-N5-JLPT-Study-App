@@ -45,6 +45,14 @@
    PARAPHRASE / CLOZE / READING ... exam material  (checkpoint E)
    LISTENING / LS_TYPES ........... 聴解 practice  (addition 1) — screenListen(),
                                     speakSeq(), lsNumQuestion(), listeningSelfTest()
+   SCENES ......................... 会話 scenes    (addition 2) — Learn → Conversations,
+                                    talkHTML(), onTalkAction(), talkSelfTest()
+   PARTICLES / COUNTERS ........... ゲーム games   (addition 3) — Games tab,
+                                    screenGames(), onGameAction(), gamesSelfTest()
+   EXAM_SPEC.listening ............ 5 聴解 papers  — listenSection(), examMenuHTML(),
+                                    examListenQHTML(), listenPaperSelfTest()
+   Backup & restore ............... Settings — backupText(), backupDownload(),
+                                    restoreFrom(), importFromFile()  (NM.backup/restore)
    ITEMS registry ................. buildItems()   item id -> item object
    SRS engine ..................... newCard(), reviewInterval(), grade(),
                                     dueCards(), newItems(), countsToday()
@@ -375,6 +383,41 @@ u.target{text-decoration:none;border-bottom:3px solid var(--accent);padding-bott
 .choice.big-num{font-size:30px;font-weight:600}
 .choice .reveal{display:block;font-family:var(--jp);font-size:16px;font-weight:400;margin-top:2px}
 
+/* ===== CONVERSATIONS (addition 2) ========================================= */
+.tk-line{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
+.tk-line:last-child{border-bottom:none}
+.tk-line .who{flex:0 0 72px;font-size:12px;color:var(--ink-faint);padding-top:5px;line-height:1.3}
+.tk-line .body{flex:1;text-align:left;background:none;border:none;padding:0;min-height:40px;color:inherit}
+.tk-line .jp{font-family:var(--jp);font-size:20px;line-height:1.5;display:block}
+.tk-line .en{font-size:14px;color:var(--ink-soft);display:block;margin-top:2px}
+.tk-line .hide{display:block;color:var(--accent);font-size:13px;margin-top:3px}
+.tk-line.me .jp{color:var(--accent)}
+
+/* ===== GAMES (addition 3) ================================================= */
+.sb-built{min-height:64px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sb-pool{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px}
+.sb-tile{min-height:var(--tap);padding:8px 14px;border-radius:12px;border:1px solid var(--line);
+  background:var(--surface);font-family:var(--jp);font-size:19px;color:var(--ink)}
+.sb-tile.on{background:var(--accent-soft);border-color:var(--accent)}
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pairs .col{display:flex;flex-direction:column;gap:8px}
+.choice.jp.pr{font-size:20px;min-height:58px}
+
+/* ===== EXAM LISTENING + BACKUP ============================================ */
+.lpapers{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.lpapers .btn{padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.lpapers .btn small{font-size:11px;color:var(--ink-faint)}
+.bk-label{display:flex;align-items:center;justify-content:center;width:100%;margin-bottom:8px;cursor:pointer}
+.bk-more summary{cursor:pointer;padding:8px 0;min-height:36px}
+.bk-text{width:100%;min-height:96px;margin:8px 0;padding:8px;border-radius:10px;border:1px solid var(--line);
+  background:var(--surface-2);color:var(--ink);font:12px/1.4 monospace}
+
+/* ===== HOW-TO GUIDE ======================================================= */
+.g-h{margin-top:0;color:var(--ink);font-size:16px}
+.g-row{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line)}
+.g-row:last-child{border-bottom:none}
+.g-row b{flex:0 0 72px}
+
 /* @@CSS@@ — add new component styles above this marker, colours as var(--…) */
 
 /* ===== MISC =============================================================== */
@@ -417,6 +460,7 @@ u.target{text-decoration:none;border-bottom:3px solid var(--accent);padding-bott
       <button data-nav="learn">Learn</button>
       <button data-nav="review">Review</button>
       <button data-nav="listen">Listen</button>
+      <button data-nav="games">Games</button>
       <button data-nav="exam">Exam</button>
       <button data-nav="progress">Progress</button>
       <button data-nav="settings">⚙</button>
@@ -436,19 +480,19 @@ var DATA_GAPS = [
   "Stroke counts follow the handwritten textbook convention, where き=4 and さ=3 because the final stroke is detached. Some printed fonts show them joined.",
   "ぢ and づ are shown as Hepburn ji / zu, the same as じ and ず. The typing drill also accepts di / du, and multiple-choice never puts two identical romaji in the same question.",
   "Rare extended katakana (ウァ, クヮ, ツァ, フュ and similar) are omitted: they do not appear at N5.",
-  "No listening section in the mock exam — browser speech synthesis is not exam-realistic (stated in BUILD-PROMPT.md section 6).",
+  "The mock exam's listening section (聴解) uses browser speech synthesis, which is clearer and slower than the real recording, so its score is a slightly optimistic estimate.",
   "Kanji: the 97 distinct characters named in BUILD-PROMPT.md section 3 are all here, plus two the spec's own content needs — 曜 (the seven weekday words cannot be written without it) and 好 (the grammar point ～が好きです). 99 in total.",
   "Each kanji gets only its standard N5 readings. Rare, literary and name-only readings (一 イツ, 日 ひ as ~び in compounds beyond the listed words, 中 なか as ジュウ) are left out on purpose.",
   "安 is the one kanji with a single compound: every other common 安-word (安心, 安全, 安売り) needs a kanji outside this set, and a compound containing an unknown kanji is worse than one fewer example.",
   "Compounds are restricted to kanji that are themselves in the app, which is why 漢字 is absent (漢 is not an N5 kanji) and words like 会社員 or 食べ物 appear as かいしゃいん and 食べもの.",
   "Vocabulary: 735 entries shipped against a target of about 800. The rest were dropped rather than invented — see BUILD-PROMPT.md section 1 rule 2.",
-  "Listening practice (addition 1) uses the device's own speech synthesis. It is clear but more robotic than the real exam recording, and it needs a Japanese voice installed. 問題3 shows the situation in English instead of the exam's picture. 35 hand-written conversations plus an unlimited numbers/times/dates/prices drill. The mock exam itself still has no listening section.",
+  "Listening practice (addition 1) uses the device's own speech synthesis. It is clear but more robotic than the real exam recording, and it needs a Japanese voice installed. 問題3 shows the situation in English instead of the exam's picture. 120 hand-written listening items plus an unlimited numbers/times/dates/prices drill. The same 120 items, which also feed the mock exam's five listening papers.",
   "Because most words are written in kana, homophones would collide. Where two N5 words share a reading, they are either merged into one entry with both meanings (あつい hot weather / hot to the touch · はやい early / fast · かぜ wind / a cold · とる to take / to photograph · ひく to pull / to play an instrument) or the more frequent one is kept alone: きる = to wear (切る to cut is left out), いる = to exist (要る to need is left out), かえる = to go home (変える to change is left out), はし = chopsticks (橋 bridge is left out), は = the topic particle (歯 tooth is left out), はな = flower (鼻 nose is left out).",
   "Verbs and adjectives whose kanji is outside the app's 99-kanji set are written in kana (はしる, つかう, いそがしい). This is also how beginner textbooks print them, and it keeps every kanji on screen one you are studying.",
   "Grammar: 96 points. A few things that appear on some N5 lists are left out because they belong to N4 in every source we trust: ～でしょう, ～と思います, ～たことがあります, the potential form and the volitional plain form.",
   "Mock exam 問題4 言い換え類義 is drawn from 13 hand-written paraphrase pairs, so sitting many papers will repeat them. Every other question type is generated and effectively unlimited.",
   "Mock exam 問題3 文脈規定 is generated by blanking a word out of an example sentence. The wrong options are deliberately taken from a different theme so that only one word really fits; that makes these questions a little easier than the real paper's.",
-  "The mock exam has no listening section, so the 180-point total cannot be completed. The result screen says so explicitly and tells you how many listening points you would have needed."
+  "The five listening papers (24 questions each, split 7/6/5/6 like the real N5) share no questions with each other, but they draw on the same bank as Listening practice, so a conversation you have practised can appear in a paper."
 ];
 
 /* =========================================================================
@@ -2487,7 +2531,7 @@ var EXAM_SPEC = {
   pass: { total: 80, totalMax: 180, sectionMin: 19 },
   scoring: [
     { key:'lkr', jp:'言語知識・読解', label:'Language Knowledge + Reading', max:120, administered:true },
-    { key:'listen', jp:'聴解', label:'Listening', max:60, administered:false }
+    { key:'listen', jp:'聴解', label:'Listening', max:60, administered:true }
   ],
   sections: [
     { key:'moji', jp:'文字・語彙', label:'Script and vocabulary', minutes:20, scoring:'lkr',
@@ -2507,10 +2551,17 @@ var EXAM_SPEC = {
         { key:'info',  n:1, jp:'問題6 情報検索',       label:'Finding information' }
       ] }
   ],
-  listeningNote: 'The real N5 has a third booklet, 聴解 (Listening, 30 minutes, 0–60 points). ' +
-    'This app does not include it: browser speech synthesis is not close enough to real ' +
-    'recorded Japanese to be worth practising against. Your listening score is therefore ' +
-    'unknown, and the 180-point total cannot be completed here.'
+  /* 聴解: five fixed papers built from LISTENING, split like the real N5 */
+  listening: { key:'choukai', jp:'聴解', label:'Listening', minutes:30, scoring:'listen', papers:5,
+    parts:[
+      { key:'task',  n:7, jp:'問題1 課題理解',   label:'What will they do?' },
+      { key:'point', n:6, jp:'問題2 ポイント理解', label:'Catch the key point' },
+      { key:'utter', n:5, jp:'問題3 発話表現',   label:'What do you say?' },
+      { key:'resp',  n:6, jp:'問題4 即時応答',   label:'Quick response — nothing is printed' }
+    ] },
+  listeningNote: 'Listening is spoken by your device’s Japanese voice, which is clearer and slower than ' +
+    'the real recording, so read the listening score as a slightly optimistic estimate. ' +
+    'Sit the full exam with a listening paper to get a complete pass/fail verdict out of 180.'
 };
 
 /* --- 言い換え類義: pairs that mean the same thing ------------------------- */
@@ -2792,7 +2843,245 @@ var LISTENING = [
 {id:'r11',type:'resp',say:'いってきます。',opts:['いってらっしゃい。','おかえりなさい。','いただきます。'],a:0,
  en:'The reply to いってきます is always いってらっしゃい.'},
 {id:'r12',type:'resp',say:'駅まで 何分ぐらい かかりますか。',opts:['10分ぐらいです。','10時ぐらいです。','10人ぐらいです。'],a:0,
- en:'何分 asks how many minutes. 時 is a clock time, 人 counts people.'}
+ en:'何分 asks how many minutes. 時 is a clock time, 人 counts people.'},
+/* --- added for the five 聴解 papers of the mock exam ----------------------- */
+{id:'t8',type:'task',setup:'女の人と 男の人が 話しています。',q:'男の人は 何を もって 行きますか。',
+ lines:[['F','あした いっしょに こうえんへ 行きましょう。'],['M','いいですね。わたしは おべんとうと 飲みものを もって 行きます。'],
+        ['F','飲みものは わたしが もって 行きますよ。'],['M','そうですか。じゃあ、わたしは おべんとうだけ もって 行きます。']],
+ opts:['おべんとう','飲みもの','おべんとうと 飲みもの','カメラ'],a:0,en:'She will bring the drinks, so he brings only the lunch box.'},
+{id:'t9',type:'task',setup:'先生が 学生に 話しています。',q:'学生は あした 何時までに 学校に 来ますか。',
+ lines:[['M','あしたは みんなで 山へ 行きます。バスは 8時半に 学校を 出ます。'],['M','8時15分までに 学校に 来てください。']],
+ opts:['8時15分','8時半','8時','8時45分'],a:0,en:'The bus leaves at 8:30, but students must arrive by 8:15.'},
+{id:'t10',type:'task',setup:'男の人と 女の人が 話しています。',q:'女の人は この後 何を しますか。',
+ lines:[['M','ばんごはんを つくりましょうか。'],['F','はい。でも、その 前に へやを そうじしましょう。'],
+        ['M','そうじは わたしが します。山田さんは 買いものに 行ってください。'],['F','わかりました。']],
+ opts:['買いものに 行きます','へやを そうじします','ばんごはんを つくります','テレビを 見ます'],a:0,en:'He does the cleaning; she goes shopping.'},
+{id:'t11',type:'task',setup:'デパートで 女の人と 店の人が 話しています。',q:'女の人は どの シャツを 買いますか。',
+ lines:[['F','すみません、この 白い シャツは いくらですか。'],['M','2000円です。'],['F','もう少し 大きいのは ありますか。'],
+        ['M','はい、この あおい シャツは 大きいですよ。'],['F','じゃあ、その あおいのを ください。']],
+ opts:['大きい あおい シャツ','小さい あおい シャツ','大きい 白い シャツ','小さい 白い シャツ'],a:0,en:'She wanted a bigger one, and the big one is blue.'},
+{id:'t12',type:'task',setup:'会社で 男の人と 女の人が 話しています。',q:'男の人は 何時ごろ 会社を 出ますか。',
+ lines:[['M','今日は 5時に かえります。'],['F','5時半から かいぎが ありますよ。'],['M','そうですか。かいぎは 何時までですか。'],
+        ['F','6時半までです。'],['M','じゃあ、かいぎの 後で かえります。']],
+ opts:['6時半','5時','5時半','6時'],a:0,en:'There is a meeting from 5:30 to 6:30, so he leaves after it.'},
+{id:'t13',type:'task',setup:'男の人と 女の人が 話しています。',q:'二人は 何で デパートへ 行きますか。',
+ lines:[['F','デパートまで バスで 行きましょうか。'],['M','バスは 時間が かかりますから、電車で 行きましょう。'],
+        ['F','電車は ちょっと 高いですね。'],['M','じゃあ、天気が いいですから、じてんしゃで 行きませんか。'],['F','いいですね。']],
+ opts:['じてんしゃ','バス','電車','タクシー'],a:0,en:'The bus is slow and the train expensive, so they cycle.'},
+{id:'t14',type:'task',setup:'先生が 学生に 話しています。',q:'学生は こんばん 何を しますか。',
+ lines:[['M','きょうの しゅくだいは かんじです。'],['M','一つの かんじを 5かい 書いてください。文は 書かないでください。']],
+ opts:['かんじを 5かい 書きます','かんじを 1かい 書きます','文を 書きます','本を 読みます'],a:0,en:'Write each kanji five times; do not write sentences.'},
+{id:'t15',type:'task',setup:'うちで 女の人と 男の人が 話しています。',q:'男の人は 何を 買いますか。',
+ lines:[['F','スーパーへ 行きますか。じゃあ、たまごと ぎゅうにゅうを 買って 来てください。'],['M','パンも 買いましょうか。'],
+        ['F','パンは まだ ありますから、いいです。']],
+ opts:['たまごと ぎゅうにゅう','たまごと パン','ぎゅうにゅうと パン','パンだけ'],a:0,en:'Eggs and milk. There is still bread, so no bread.'},
+{id:'t16',type:'task',setup:'学校で 男の学生と 女の学生が 話しています。',q:'女の学生は だれに 本を かりますか。',
+ lines:[['F','この 本を 読みたいです。としょかんに ありますか。'],['M','としょかんには ありませんが、先生が もっていますよ。'],
+        ['F','じゃあ、先生に かります。']],
+ opts:['先生','男の学生','としょかんの 人','友だち'],a:0,en:'The library does not have it; the teacher does.'},
+{id:'t17',type:'task',setup:'男の人と 女の人が 電話で 話しています。',q:'女の人は どこで まちますか。',
+ lines:[['F','もしもし、今 駅に つきました。'],['M','わたしは 駅の 前の きっさてんに います。'],['F','じゃあ、そこへ 行きます。'],
+        ['M','いいえ、雨が ふっていますから、わたしが 行きます。駅の いりぐちで まっていてください。']],
+ opts:['駅の いりぐち','きっさてん','電車の 中','駅の 前の 店'],a:0,en:'It is raining, so he comes to her. She waits at the station entrance.'},
+{id:'t18',type:'task',setup:'レストランで 男の人と 女の人が 話しています。',q:'男の人は 何を 飲みますか。',
+ lines:[['F','何を 飲みますか。わたしは ビールに します。'],['M','わたしは 車で 来ましたから、おさけは 飲みません。'],
+        ['F','じゃあ、ジュースは どうですか。'],['M','あまい ものは あまり 好きじゃありません。おちゃに します。']],
+ opts:['おちゃ','ビール','ジュース','コーヒー'],a:0,en:'No alcohol because he is driving, no juice because it is sweet: tea.'},
+{id:'t19',type:'task',setup:'店で 男の人と 店の人が 話しています。',q:'男の人は りんごを いくつ 買いますか。',
+ lines:[['M','りんごを 五つ ください。'],['F','すみません。りんごは 三つしか ありません。'],['M','じゃあ、りんごを 三つと みかんを 二つ ください。']],
+ opts:['三つ','五つ','二つ','八つ'],a:0,en:'He wanted five, but there are only three apples.'},
+{id:'t20',type:'task',setup:'会社で 女の人と 男の人が 話しています。',q:'男の人は これから どこへ 行きますか。',
+ lines:[['F','田中さん、ゆうびんきょくへ 行って、きってを 買って 来てください。'],['M','はい。ぎんこうにも 行きましょうか。'],
+        ['F','ぎんこうは あしたで いいです。']],
+ opts:['ゆうびんきょく','ぎんこう','ゆうびんきょくと ぎんこう','駅'],a:0,en:'Only the post office today. The bank can wait until tomorrow.'},
+{id:'t21',type:'task',setup:'男の人と 女の人が 話しています。',q:'二人は あした 何を しますか。',
+ lines:[['M','あした いっしょに テニスを しませんか。'],['F','あしたは 雨ですよ。'],['M','そうですか。じゃあ、えいがを 見に 行きませんか。'],
+        ['F','いいですね。行きましょう。']],
+ opts:['えいがを 見ます','テニスを します','うちで 休みます','買いものを します'],a:0,en:'Rain means no tennis, so they go to a film.'},
+{id:'t22',type:'task',setup:'学校で 先生が 話しています。',q:'学生は 何ばんの へやへ 行きますか。',
+ lines:[['M','みなさん、テストは 3ばんの へやで します。'],['M','すみません、3ばんでは ありません。5ばんの へやです。']],
+ opts:['5ばん','3ばん','1ばん','15ばん'],a:0,en:'The teacher corrects himself: room 5, not room 3.'},
+{id:'t23',type:'task',setup:'うちで 女の人と 男の人が 話しています。',q:'男の人は 先に 何を しますか。',
+ lines:[['F','ばんごはんですよ。'],['M','はい。でも、先に おふろに 入ります。'],['F','ごはんが つめたく なりますよ。'],
+        ['M','そうですね。じゃあ、先に 食べます。']],
+ opts:['ごはんを 食べます','おふろに 入ります','テレビを 見ます','ねます'],a:0,en:'He changes his mind: dinner first, so it does not get cold.'},
+{id:'t24',type:'task',setup:'駅で 女の人と 駅の人が 話しています。',q:'女の人は どの 駅で おりますか。',
+ lines:[['F','すみません、大学へ 行きたいです。'],['M','この 電車に のって、中川で おりてください。'],['F','大川ですか。'],
+        ['M','いいえ、中川です。大川の つぎの 駅です。']],
+ opts:['中川','大川','中山','山川'],a:0,en:'Nakagawa, the stop after Ōkawa. Listen for the first sound.'},
+{id:'t25',type:'task',setup:'男の人と 女の人が 話しています。',q:'二人は 山田さんに 何を あげますか。',
+ lines:[['M','山田さんの たんじょうびに 何を あげましょうか。'],['F','はなは どうですか。'],['M','はなは きのう 田中さんが あげました。'],
+        ['F','じゃあ、ケーキは どうですか。'],['M','いいですね。ケーキに しましょう。']],
+ opts:['ケーキ','はな','本','かばん'],a:0,en:'Mr Tanaka already gave flowers, so they give a cake.'},
+{id:'t26',type:'task',setup:'きょうしつで 先生が 学生に 話しています。',q:'学生は テストの とき、何を つかいますか。',
+ lines:[['M','テストの とき、じしょを つかっても いいです。'],['M','でも、けいたいは つかっては いけません。ボールペンで 書いてください。']],
+ opts:['じしょと ボールペン','じしょと けいたい','けいたいと ボールペン','じしょだけ'],a:0,en:'A dictionary is allowed and they write in ballpoint pen. No phones.'},
+{id:'t27',type:'task',setup:'男の人と 女の人が 話しています。',q:'女の人は あした 何時に おきますか。',
+ lines:[['M','あしたは 何時に うちを 出ますか。'],['F','7時半です。'],['M','じゃあ、6時ごろ おきますか。'],
+        ['F','いいえ、あさごはんは 食べませんから、7時に おきます。']],
+ opts:['7時','6時','7時半','6時半'],a:0,en:'She skips breakfast, so she gets up at 7 and leaves at 7:30.'},
+{id:'t28',type:'task',setup:'デパートで 男の人と 店の人が 話しています。',q:'男の人は 先に 何かいへ 行きますか。',
+ lines:[['M','すみません、くつは 何かいですか。'],['F','3かいです。'],['M','かさは？'],['F','かさは 5かいです。'],
+        ['M','じゃあ、先に かさを 買います。']],
+ opts:['5かい','3かい','1かい','4かい'],a:0,en:'He buys the umbrella first, and umbrellas are on floor 5.'},
+{id:'t29',type:'task',setup:'うちで 男の人と 女の人が 話しています。',q:'女の人は この後 何を しますか。',
+ lines:[['M','へやが あついですね。'],['F','エアコンを つけましょうか。'],['M','いいえ、まどを あけてください。'],['F','はい。']],
+ opts:['まどを あけます','エアコンを つけます','まどを しめます','電気を けします'],a:0,en:'He says no to the air conditioner and asks her to open the window.'},
+{id:'t30',type:'task',setup:'学校で 女の学生と 男の学生が 話しています。',q:'男の学生は どこで ひるごはんを 食べますか。',
+ lines:[['F','いっしょに 学校の 前の レストランで ひるごはんを 食べませんか。'],
+        ['M','すみません。今日は おべんとうを もって 来ましたから、きょうしつで 食べます。'],['F','そうですか。じゃあ、また あした。']],
+ opts:['きょうしつ','学校の 前の レストラン','こうえん','うち'],a:0,en:'He brought a lunch box, so he eats in the classroom.'},
+{id:'t31',type:'task',setup:'会社で 男の人と 女の人が 話しています。',q:'女の人は いつ 田中さんに 電話を しますか。',
+ lines:[['M','田中さんに 電話しましたか。'],['F','はい。でも、田中さんは 今 かいぎ中でした。'],['M','かいぎは 3時に おわりますよ。'],
+        ['F','じゃあ、かいぎの 後で もう いちど 電話します。']],
+ opts:['かいぎの 後','かいぎの 前','今','あした'],a:0,en:'Mr Tanaka is in a meeting, so she will call again after it.'},
+{id:'t32',type:'task',setup:'店で 女の人と 店の人が 話しています。',q:'女の人は どの かさを 買いますか。',
+ lines:[['F','この あかい かさは いくらですか。'],['M','1500円です。こちらの くろいのは 1000円です。'],['F','じゃあ、安い ほうを ください。']],
+ opts:['くろい かさ','あかい かさ','あおい かさ','白い かさ'],a:0,en:'She takes the cheaper one: the black umbrella at 1,000 yen.'},
+{id:'t33',type:'task',setup:'男の人と 女の人が 話しています。',q:'男の人は 女の人に 何を かりますか。',
+ lines:[['M','すみません、かさを かしてください。'],['F','どう しましたか。'],['M','うちに かさを わすれました。'],['F','いいですよ。どうぞ。']],
+ opts:['かさ','かぎ','ペン','お金'],a:0,en:'He left his umbrella at home and borrows hers.'},
+{id:'t34',type:'task',setup:'学生と 先生が 話しています。',q:'学生は 何曜日に 先生の ところへ 行きますか。',
+ lines:[['M','先生、しつもんが あります。あした 行っても いいですか。'],['F','あしたは 水曜日ですね。水曜日は いそがしいです。木曜日は どうですか。'],
+        ['M','木曜日は じゅぎょうが たくさん あります。'],['F','じゃあ、金曜日に 来てください。']],
+ opts:['金曜日','水曜日','木曜日','月曜日'],a:0,en:'Wednesday the teacher is busy, Thursday the student is: Friday.'},
+{id:'t35',type:'task',setup:'うちで 女の人と 男の人が 話しています。',q:'男の人は これから 何を しますか。',
+ lines:[['F','せんたくは もう しましたか。'],['M','いいえ、まだです。'],['F','じゃあ、せんたくを してください。わたしは そうじを します。'],['M','はい、わかりました。']],
+ opts:['せんたくを します','そうじを します','りょうりを します','買いものに 行きます'],a:0,en:'He does the washing; she does the cleaning.'},
+{id:'p9',type:'point',setup:'男の人と 女の人が 話しています。',q:'女の人は どうして 大学を 休みましたか。',
+ lines:[['M','きのう 大学に 来ませんでしたね。'],['F','はい。あたまが いたかったですから、うちで ねていました。'],['M','かぜですか。'],
+        ['F','いいえ、かぜじゃありません。今日は もう げんきです。']],
+ opts:['あたまが いたかったから','かぜを ひいたから','おなかが いたかったから','しごとが あったから'],a:0,en:'She had a headache. She says clearly it was not a cold.'},
+{id:'p10',type:'point',setup:'女の人と 男の人が 話しています。',q:'男の人の シャツは いくらでしたか。',
+ lines:[['F','その シャツ、いいですね。いくらでしたか。'],['M','3000円の シャツでしたが、1000円 安く なっていました。']],
+ opts:['2000円','3000円','1000円','4000円'],a:0,en:'A 3,000-yen shirt reduced by 1,000 yen = 2,000 yen.'},
+{id:'p11',type:'point',setup:'女の人と 男の人が 話しています。',q:'男の人は きのう 何時間 べんきょうしましたか。',
+ lines:[['F','きのうは 何時間 べんきょうしましたか。'],['M','午後 2時から 5時まで べんきょうしました。'],['F','3時間ですね。'],
+        ['M','いいえ、4時に 1時間 休みましたから、2時間です。']],
+ opts:['2時間','3時間','1時間','5時間'],a:0,en:'2 to 5 is three hours, minus a one-hour break = two hours.'},
+{id:'p12',type:'point',setup:'男の人と 女の人が 話しています。',q:'女の人の たんじょうびは いつですか。',
+ lines:[['M','山田さんの たんじょうびは いつですか。'],['F','5月20日です。'],['M','5月2日ですか。'],['F','いいえ、5月 はつかです。']],
+ opts:['5月20日','5月2日','5月12日','4月20日'],a:0,en:'はつか is the 20th. ふつか would be the 2nd.'},
+{id:'p13',type:'point',setup:'女の人と 男の人が 話しています。',q:'男の人は 今日 何で 会社へ 来ましたか。',
+ lines:[['F','今日は 車で 来ましたか。'],['M','いいえ、車は 父が つかっていますから、今日は 電車で 来ました。'],['F','いつもは 車ですか。'],['M','はい。']],
+ opts:['電車','車','バス','じてんしゃ'],a:0,en:'He usually drives, but today his father has the car, so he took the train.'},
+{id:'p14',type:'point',setup:'男の人と 女の人が 話しています。',q:'女の人は 土曜日に だれと 出かけますか。',
+ lines:[['M','しゅうまつは 何を しますか。'],['F','土曜日は 友だちと 買いものに 行きます。日曜日は 母と りょうりを します。'],['M','いいですね。']],
+ opts:['友だち','母','いもうと','一人で'],a:0,en:'Saturday is shopping with a friend. The mother is on Sunday.'},
+{id:'p15',type:'point',setup:'学校で 女の学生と 男の学生が 話しています。',q:'男の学生は どうして しゅくだいを しませんでしたか。',
+ lines:[['F','しゅくだいを しましたか。'],['M','いいえ、しませんでした。'],['F','いそがしかったですか。'],['M','いいえ、しゅくだいの ノートを 学校に わすれました。']],
+ opts:['ノートを 学校に わすれたから','いそがしかったから','びょうきだったから','しゅくだいが むずかしかったから'],a:0,en:'He was not busy; he left his notebook at school.'},
+{id:'p16',type:'point',setup:'女の人と 男の人が 話しています。',q:'男の人の 新しい へやは どうですか。',
+ lines:[['F','新しい へやは どうですか。'],['M','ひろくて あかるいです。でも、駅から ちょっと とおいです。']],
+ opts:['ひろくて あかるい','せまくて くらい','ひろくて くらい','駅から ちかい'],a:0,en:'Spacious and bright, but a little far from the station.'},
+{id:'p17',type:'point',setup:'女の人と 男の人が 話しています。',q:'男の人は 日本に 来て どのぐらいですか。',
+ lines:[['F','日本に 来て どのぐらいですか。'],['M','きょねんの 四月に 来ましたから、一年半です。']],
+ opts:['一年半','一年','半年','二年'],a:0,en:'He says it himself: one and a half years.'},
+{id:'p18',type:'point',setup:'きっさてんで 男の人と 店の人が 話しています。',q:'ぜんぶで いくらですか。',
+ lines:[['M','コーヒーを 二つと ケーキを 一つ ください。'],['F','コーヒーは 一つ 300円、ケーキは 400円です。']],
+ opts:['1000円','700円','1100円','600円'],a:0,en:'Two coffees at 300 = 600, plus a cake at 400 = 1,000 yen.'},
+{id:'p19',type:'point',setup:'女の人と 男の人が 話しています。',q:'男の人は どこで 山田さんに 会いましたか。',
+ lines:[['F','きのう 山田さんに 会いましたか。'],['M','はい、会いました。'],['F','駅で 会いましたか。'],
+        ['M','いいえ、ほんやで 会いました。それから、いっしょに きっさてんで コーヒーを 飲みました。']],
+ opts:['ほんや','駅','きっさてん','ぎんこう'],a:0,en:'They met at the bookshop; the coffee shop came afterwards.'},
+{id:'p20',type:'point',setup:'男の人と 女の人が 話しています。',q:'女の人は 毎日 何時間ぐらい ねますか。',
+ lines:[['M','毎日 何時に ねますか。'],['F','よる 12時ごろ ねます。'],['M','あさは？'],['F','6時に おきます。']],
+ opts:['6時間ぐらい','7時間ぐらい','8時間ぐらい','12時間ぐらい'],a:0,en:'Midnight to 6 a.m. is about six hours.'},
+{id:'p21',type:'point',setup:'会社で 男の人と 女の人が 話しています。',q:'来週の かいぎは いつですか。',
+ lines:[['M','来週の かいぎは 月曜日ですね。'],['F','いいえ、月曜日は 田中さんが 休みですから、火曜日に なりました。'],
+        ['M','火曜日の 何時からですか。'],['F','午後 2時からです。']],
+ opts:['火曜日の 午後 2時','月曜日の 午後 2時','火曜日の 午後 4時','月曜日の 午前 10時'],a:0,en:'Moved from Monday to Tuesday, starting at 2 p.m.'},
+{id:'p22',type:'point',setup:'女の人と 男の人が 話しています。',q:'男の人は 何が いちばん 好きですか。',
+ lines:[['F','スポーツは 何が 好きですか。'],['M','サッカーも 好きですが、テニスが いちばん 好きです。'],['F','およぐのは？'],
+        ['M','およぐのは あまり 好きじゃありません。']],
+ opts:['テニス','サッカー','およぐこと','ピアノ'],a:0,en:'He likes football too, but tennis most of all.'},
+{id:'p23',type:'point',setup:'男の人と 女の人が 話しています。',q:'山田さんの いもうとは どの 人ですか。',
+ lines:[['M','あの めがねの 人が 山田さんの いもうとさんですか。'],['F','いいえ、いもうとは めがねを かけていません。ぼうしを かぶっている 人です。']],
+ opts:['ぼうしを かぶっている 人','めがねを かけている 人','めがねを かけて、ぼうしを かぶっている 人','ネクタイを している 人'],a:0,
+ en:'No glasses, and wearing a hat.'},
+{id:'p24',type:'point',setup:'駅で 女の人と 駅の人が 話しています。',q:'つぎの 電車は 何時に 来ますか。',
+ lines:[['F','つぎの 電車は 何時ですか。'],['M','9時10分ですが、今日は 雨ですから、20分 おそく なります。']],
+ opts:['9時半','9時10分','9時20分','10時'],a:0,en:'9:10 plus a 20-minute delay = 9:30.'},
+{id:'p25',type:'point',setup:'女の人と 男の人が 話しています。',q:'男の人は 何が ありませんか。',
+ lines:[['F','どう しましたか。'],['M','さいふが ありません。'],['F','かばんの 中は？'],['M','かばんの 中には かぎと けいたいしか ありません。']],
+ opts:['さいふ','かぎ','けいたい','かばん'],a:0,en:'His wallet is missing. The key and the phone are in the bag.'},
+{id:'p26',type:'point',setup:'先生と 学生が 話しています。',q:'学生は テストの 何が むずかしかったですか。',
+ lines:[['M','きのうの テストは どうでしたか。'],['F','かんじは かんたんでしたが、文が むずかしかったです。']],
+ opts:['文','かんじ','ひらがな','カタカナ'],a:0,en:'The kanji were easy; the sentences were hard.'},
+{id:'p27',type:'point',setup:'男の人と 女の人が 話しています。',q:'女の人は どうして パーティーに 行きませんか。',
+ lines:[['M','あしたの パーティーに 行きますか。'],['F','いいえ、行きません。'],['M','いそがしいですか。'],
+        ['F','いいえ。あさって テストが ありますから、べんきょうします。']],
+ opts:['テストの べんきょうを するから','いそがしいから','びょうきだから','パーティーが きらいだから'],a:0,en:'Not busy: she has a test the day after tomorrow and will study.'},
+{id:'p28',type:'point',setup:'店で 女の人と 店の人が 話しています。',q:'この 店は 今日 何時に しまりますか。',
+ lines:[['F','すみません、この 店は 何時までですか。'],['M','月曜日から 金曜日までは よる 9時までです。土曜日と 日曜日は 8時までです。'],
+        ['F','今日は 日曜日ですね。'],['M','はい。']],
+ opts:['8時','9時','7時','10時'],a:0,en:'Today is Sunday, and at weekends the shop closes at 8.'},
+{id:'p29',type:'point',setup:'女の人と 男の人が 話しています。',q:'男の人は 今 どこに すんでいますか。',
+ lines:[['F','田中さんは どこに すんでいますか。'],['M','先月までは 駅の ちかくに すんでいました。'],['M','今は 大学の ちかくに すんでいます。']],
+ opts:['大学の ちかく','駅の ちかく','会社の ちかく','こうえんの ちかく'],a:0,en:'Near the station was until last month; now near the university.'},
+{id:'p30',type:'point',setup:'男の人と 女の人が 話しています。',q:'女の人は 今 一週間に 何かい テニスを しますか。',
+ lines:[['M','山田さんは よく テニスを しますか。'],['F','はい。前は 一週間に 一かいでしたが、今は 三かい します。'],['M','すごいですね。']],
+ opts:['三かい','一かい','二かい','四かい'],a:0,en:'Once a week before, three times now.'},
+{id:'u9',type:'utter',sit:'友だちに かりた 本を かえします。何と いいますか。',sitEn:'You are returning a book you borrowed from a friend.',
+ opts:['どうも ありがとうございます。','いただきます。','本を かりてください。'],a:0,en:'When you give back something you borrowed, thank the person.'},
+{id:'u10',type:'utter',sit:'レストランで 店の人を よびます。何と いいますか。',sitEn:'In a restaurant, you want to call the waiter over.',
+ opts:['すみません。','いらっしゃいませ。','いただきます。'],a:0,en:'すみません is how you politely get someone’s attention.'},
+{id:'u11',type:'utter',sit:'先生の へやに 入ります。何と いいますか。',sitEn:'You are going into the teacher’s office.',
+ opts:['しつれいします。','いってきます。','ただいま。'],a:0,en:'しつれいします when you enter someone else’s room.'},
+{id:'u12',type:'utter',sit:'友だちは げんきが ありません。何と いいますか。',sitEn:'Your friend looks unwell.',
+ opts:['だいじょうぶですか。','げんきでした。','いただきます。'],a:0,en:'だいじょうぶですか = Are you all right?'},
+{id:'u13',type:'utter',sit:'今日は 友だちの たんじょうびです。何と いいますか。',sitEn:'It is your friend’s birthday today.',
+ opts:['おめでとうございます。','ごめんなさい。','おかえりなさい。'],a:0,en:'おめでとうございます = congratulations / happy birthday.'},
+{id:'u14',type:'utter',sit:'よる、ねる 前に うちの 人に 何と いいますか。',sitEn:'You are going to bed. What do you say to your family?',
+ opts:['おやすみなさい。','こんばんは。','いってらっしゃい。'],a:0,en:'おやすみなさい = good night, said before sleeping.'},
+{id:'u15',type:'utter',sit:'うちに かえりました。何と いいますか。',sitEn:'You have just come home.',
+ opts:['ただいま。','いってきます。','いらっしゃいませ。'],a:0,en:'ただいま = I’m home.'},
+{id:'u16',type:'utter',sit:'先生の 話が はやくて わかりません。何と いいますか。',sitEn:'The teacher is speaking too fast for you.',
+ opts:['もう少し ゆっくり 話してください。','もう少し はやく 話してください。','話を 聞いてください。'],a:0,en:'ゆっくり = slowly.'},
+{id:'u17',type:'utter',sit:'店で シャツを 見たいです。何と いいますか。',sitEn:'In a shop, you want to look at a shirt.',
+ opts:['その シャツを 見せてください。','その シャツを 見てください。','その シャツを 買ってください。'],a:0,
+ en:'見せてください = please show me. 見てください means “please look at it” yourself.'},
+{id:'u18',type:'utter',sit:'ごはんを 食べました。何と いいますか。',sitEn:'You have just finished eating.',
+ opts:['ごちそうさまでした。','いただきます。','おねがいします。'],a:0,en:'ごちそうさまでした after a meal; いただきます before it.'},
+{id:'u19',type:'utter',sit:'友だちと えいがに 行きたいです。何と いいますか。',sitEn:'You want to go to a film with your friend.',
+ opts:['いっしょに えいがを 見ませんか。','えいがを 見ましたか。','えいがは どうでしたか。'],a:0,en:'～ませんか invites someone.'},
+{id:'u20',type:'utter',sit:'電車で おばあさんが 立っています。何と いいますか。',sitEn:'On a train, an elderly woman is standing next to your seat.',
+ opts:['どうぞ、すわってください。','すわっても いいですか。','立ってください。'],a:0,en:'Offer your seat: どうぞ、すわってください.'},
+{id:'u21',type:'utter',sit:'はじめて 会った 人の 名前を 聞きたいです。何と いいますか。',sitEn:'You want to ask the name of someone you have just met.',
+ opts:['お名前は 何ですか。','名前を 書いてください。','わたしの 名前です。'],a:0,en:'お名前は 何ですか asks someone’s name politely.'},
+{id:'u22',type:'utter',sit:'ぎんこうへ 行きたいですが、道が わかりません。何と いいますか。',sitEn:'You want to go to the bank but do not know the way.',
+ opts:['すみません、ぎんこうは どこですか。','ぎんこうへ 行きましたか。','ぎんこうは 何時からですか。'],a:0,en:'～は どこですか asks where something is.'},
+{id:'u23',type:'utter',sit:'友だちが「ペンを かしてください」と いいました。何と いいますか。',sitEn:'Your friend asks to borrow your pen.',
+ opts:['はい、どうぞ。','いただきます。','ごめんなさい。'],a:0,en:'Hand it over with はい、どうぞ.'},
+{id:'u24',type:'utter',sit:'やくそくの 時間に おそく なりました。何と いいますか。',sitEn:'You arrive late for an appointment.',
+ opts:['おそく なって、すみません。','おそいですね。','はやく 来てください。'],a:0,en:'Apologise: おそく なって、すみません.'},
+{id:'u25',type:'utter',sit:'しごとが おわりました。先に かえります。何と いいますか。',sitEn:'Work is over and you are leaving before your colleagues.',
+ opts:['お先に しつれいします。','いってらっしゃい。','おかえりなさい。'],a:0,en:'お先に しつれいします = excuse me for leaving first.'},
+{id:'r13',type:'resp',say:'はじめまして。田中です。',opts:['はじめまして。山田です。','はい、そうです。','いってらっしゃい。'],a:0,en:'Answer a first greeting with your own name.'},
+{id:'r14',type:'resp',say:'おいくつですか。',opts:['20さいです。','3000円です。','3時です。'],a:0,en:'おいくつですか politely asks your age.'},
+{id:'r15',type:'resp',say:'この 本、かりても いいですか。',opts:['はい、どうぞ。','はい、かりました。','いいえ、かしてください。'],a:0,en:'Give permission with はい、どうぞ.'},
+{id:'r16',type:'resp',say:'きのうは どこかへ 行きましたか。',opts:['いいえ、どこも 行きませんでした。','はい、どこも 行きました。','いいえ、あした 行きました。'],a:0,
+ en:'どこも + a negative verb = nowhere.'},
+{id:'r17',type:'resp',say:'おちゃは いかがですか。',opts:['ありがとうございます。いただきます。','はい、おちゃです。','いいえ、おちゃを 飲みました。'],a:0,
+ en:'いかがですか offers something: thank them and accept.'},
+{id:'r18',type:'resp',say:'しゅうまつは 何を しましたか。',opts:['友だちと テニスを しました。','来週 テニスを します。','テニスが 好きです。'],a:0,
+ en:'The question is in the past, so the answer must be too.'},
+{id:'r19',type:'resp',say:'あの 人は だれですか。',opts:['田中さんです。','あそこです。','とても げんきです。'],a:0,en:'だれ asks who: answer with a person.'},
+{id:'r20',type:'resp',say:'どうして 日本語を べんきょうしていますか。',opts:['日本の 会社で はたらきたいですから。','毎日 べんきょうしています。','大学で べんきょうしています。'],a:0,
+ en:'どうして asks why: answer with ～から.'},
+{id:'r21',type:'resp',say:'いっしょに かえりませんか。',opts:['ええ、かえりましょう。','はい、かえりました。','いいえ、かえってください。'],a:0,en:'Accept an invitation with ～ましょう.'},
+{id:'r22',type:'resp',say:'すみません、今 何時ですか。',opts:['3時半です。','3時間です。','3日です。'],a:0,en:'何時 asks the clock time, not a length of time.'},
+{id:'r23',type:'resp',say:'お国は どちらですか。',opts:['インドです。','あちらです。','日本語です。'],a:0,en:'お国は どちらですか asks which country you are from.'},
+{id:'r24',type:'resp',say:'この ケーキ、おいしいですね。',opts:['ええ、ほんとうに おいしいですね。','はい、ごちそうさまでした。','いいえ、食べました。'],a:0,
+ en:'～ですね wants agreement: ええ、ほんとうに….'},
+{id:'r25',type:'resp',say:'あした 何時に 会いましょうか。',opts:['10時は どうですか。','10時に 会いました。','10時間です。'],a:0,en:'Suggest a time with ～は どうですか.'},
+{id:'r26',type:'resp',say:'ここに 名前を 書いてください。',opts:['はい、わかりました。','名前は 何ですか。','はい、書いてください。'],a:0,en:'Reply to a request with はい、わかりました.'},
+{id:'r27',type:'resp',say:'きのうの しけんは どうでしたか。',opts:['ちょっと むずかしかったです。','あした しけんです。','しけんは 9時からです。'],a:0,
+ en:'どうでしたか asks how it went, in the past.'},
+{id:'r28',type:'resp',say:'先に 食べても いいですか。',opts:['ええ、どうぞ。','ええ、食べました。','いいえ、食べます。'],a:0,en:'～ても いいですか asks permission: ええ、どうぞ.'},
+{id:'r29',type:'resp',say:'ひるごはんは もう 食べましたか。',opts:['いいえ、まだです。','いいえ、まだ 食べます。','はい、食べません。'],a:0,en:'Not yet = いいえ、まだです.'},
+{id:'r30',type:'resp',say:'この かさは 田中さんのですか。',opts:['いいえ、わたしのじゃありません。','はい、田中さんは ここです。','いいえ、かさです。'],a:0,
+ en:'Asked if it is yours, say whose it is (or is not).'}
 ];
 
 var LS_TYPES = [
@@ -2801,6 +3090,219 @@ var LS_TYPES = [
   {key:'utter',jp:'問題3 発話表現', label:'What do you say?', hint:'Read the situation, hear three phrases, pick the right one.'},
   {key:'resp', jp:'問題4 即時応答', label:'Quick response', hint:'Hear one line, pick the best reply. Nothing is printed.'},
   {key:'num',  jp:'数字・時間・日付', label:'Numbers, times, dates, prices', hint:'Unlimited. The thing N5 listening tests most often.'}
+];
+
+/* =========================================================================
+   SCENES — addition 2: everyday N5 conversations to read, hear and role-play.
+     who    names of the two speakers, M (male voice) and F (female voice)
+     lines  [speaker, Japanese, English]
+     quiz   comprehension questions: q, 4 opts, a = index of the right one
+     keys   useful phrases from the scene: [Japanese, English]
+   Every Japanese string is checked by NM.selfTest() against the app's own
+   kanji and vocabulary, like every other sentence in the app.
+   ========================================================================= */
+var SCENES = [
+{id:'s1',title:'じこしょうかい',en:'Introducing yourself',who:{M:'Tanaka 田中',F:'Yamada 山田'},
+ lines:[['M','はじめまして。田中です。','Nice to meet you. I’m Tanaka.'],
+  ['F','はじめまして。山田です。よろしくおねがいします。','Nice to meet you. I’m Yamada. Pleased to meet you.'],
+  ['M','よろしくおねがいします。山田さんは 学生ですか。','Pleased to meet you. Are you a student, Ms Yamada?'],
+  ['F','はい、大学の 学生です。田中さんは？','Yes, I’m a university student. And you?'],
+  ['M','わたしは かいしゃいんです。','I’m a company employee.'],
+  ['F','田中さんは どこに すんでいますか。','Where do you live?'],
+  ['M','駅の ちかくに すんでいます。','I live near the station.'],
+  ['F','わたしもです。','Me too.']],
+ quiz:[{q:'山田さんは 学生ですか。',opts:['はい、大学の 学生です。','いいえ、かいしゃいんです。','いいえ、先生です。','はい、高校の 学生です。'],a:0},
+  {q:'田中さんは どこに すんでいますか。',opts:['駅の ちかく','大学の ちかく','会社の ちかく','山の 中'],a:0}],
+ keys:[['はじめまして','Nice to meet you (the first time)'],['よろしくおねがいします','Pleased to meet you'],['～に すんでいます','I live in / near ~']]},
+{id:'s2',title:'店で',en:'Buying something in a shop',who:{M:'Shop assistant',F:'You'},
+ lines:[['M','いらっしゃいませ。','Welcome.'],
+  ['F','すみません、この かばんは いくらですか。','Excuse me, how much is this bag?'],
+  ['M','3000円です。','It’s 3,000 yen.'],
+  ['F','ちょっと 高いですね。もう少し 安い かばんは ありますか。','That’s a bit expensive. Do you have a slightly cheaper bag?'],
+  ['M','はい、こちらは 1500円です。','Yes, this one is 1,500 yen.'],
+  ['F','じゃあ、これを ください。','Then I’ll take this one.'],
+  ['M','ありがとうございます。','Thank you very much.']],
+ quiz:[{q:'女の人は いくらの かばんを 買いましたか。',opts:['1500円','3000円','500円','1300円'],a:0},
+  {q:'3000円の かばんは どうでしたか。',opts:['ちょっと 高かったです','とても 安かったです','小さかったです','古かったです'],a:0}],
+ keys:[['～は いくらですか','How much is ~?'],['～を ください','~, please (I’ll take it)'],['もう少し 安い','a little cheaper']]},
+{id:'s3',title:'レストランで',en:'Ordering in a restaurant',who:{M:'You',F:'Waiter'},
+ lines:[['F','いらっしゃいませ。お二人ですか。','Welcome. Two people?'],
+  ['M','はい、二人です。','Yes, two.'],
+  ['F','こちらへ どうぞ。メニューです。','This way, please. Here is the menu.'],
+  ['M','すみません、この カレーと サラダを おねがいします。','Excuse me, this curry and a salad, please.'],
+  ['F','お飲みものは？','And to drink?'],
+  ['M','コーヒーを 二つ おねがいします。','Two coffees, please.'],
+  ['F','はい、少し まってください。','Certainly. Please wait a moment.']],
+ quiz:[{q:'男の人は 何を 食べますか。',opts:['カレーと サラダ','カレーと パン','すしと サラダ','ラーメン'],a:0},
+  {q:'男の人は 何を 飲みますか。',opts:['コーヒー','おちゃ','ジュース','水'],a:0}],
+ keys:[['～を おねがいします','~, please (when ordering)'],['お二人ですか','Two people? (said by staff)'],['少し まってください','Please wait a moment']]},
+{id:'s4',title:'道を 聞く',en:'Asking the way',who:{M:'Passer-by',F:'You'},
+ lines:[['F','すみません、ゆうびんきょくは どこですか。','Excuse me, where is the post office?'],
+  ['M','ゆうびんきょくですか。この 道を まっすぐ 行ってください。','The post office? Go straight along this road.'],
+  ['F','まっすぐですね。','Straight on, right.'],
+  ['M','はい。それから、つぎの かどを 右に まがってください。','Yes. Then turn right at the next corner.'],
+  ['M','ゆうびんきょくは ぎんこうの となりです。','The post office is next to the bank.'],
+  ['F','わかりました。ありがとうございます。','I see. Thank you very much.'],
+  ['M','いいえ。','Not at all.']],
+ quiz:[{q:'ゆうびんきょくは どこですか。',opts:['ぎんこうの となり','ぎんこうの 前','駅の 前','こうえんの 中'],a:0},
+  {q:'つぎの かどを どちらに まがりますか。',opts:['右','左','まっすぐ','後ろ'],a:0}],
+ keys:[['～は どこですか','Where is ~?'],['まっすぐ 行ってください','Please go straight on'],['右に まがってください','Please turn right']]},
+{id:'s5',title:'駅で',en:'At the station',who:{M:'Station staff',F:'You'},
+ lines:[['F','すみません、大川まで いくらですか。','Excuse me, how much is it to Ōkawa?'],
+  ['M','大川までは 250円です。','To Ōkawa it’s 250 yen.'],
+  ['F','つぎの 電車は 何時ですか。','What time is the next train?'],
+  ['M','10時15分です。3ばんから 出ます。','10:15. It leaves from platform 3.'],
+  ['F','大川まで 何分ぐらい かかりますか。','About how many minutes does it take to Ōkawa?'],
+  ['M','20分ぐらいです。','About 20 minutes.'],
+  ['F','ありがとうございます。','Thank you very much.']],
+ quiz:[{q:'つぎの 電車は 何時ですか。',opts:['10時15分','10時50分','10時5分','11時15分'],a:0},
+  {q:'大川まで いくらですか。',opts:['250円','200円','350円','520円'],a:0}],
+ keys:[['～まで いくらですか','How much is it to ~?'],['何分ぐらい かかりますか','About how many minutes does it take?'],['つぎの 電車','the next train']]},
+{id:'s6',title:'えいがに さそう',en:'Inviting a friend out',who:{M:'Tanaka 田中',F:'Yamada 山田'},
+ lines:[['M','山田さん、土曜日は ひまですか。','Ms Yamada, are you free on Saturday?'],
+  ['F','はい、ひまです。どうしてですか。','Yes, I am. Why?'],
+  ['M','いっしょに えいがを 見に 行きませんか。','Would you like to go and see a film together?'],
+  ['F','いいですね。何時に 会いましょうか。','Sounds good. What time shall we meet?'],
+  ['M','2時に 駅の 前で 会いましょう。','Let’s meet in front of the station at 2.'],
+  ['F','わかりました。じゃあ、土曜日に。','Got it. See you on Saturday, then.']],
+ quiz:[{q:'二人は 土曜日に 何を しますか。',opts:['えいがを 見ます','買いものを します','テニスを します','ごはんを 食べます'],a:0},
+  {q:'二人は どこで 会いますか。',opts:['駅の 前','えいがかんの 前','学校','山田さんの うち'],a:0}],
+ keys:[['～ませんか','Won’t you ~? (an invitation)'],['～ましょう','Let’s ~'],['いいですね','Sounds good']]},
+{id:'s7',title:'電話で',en:'A phone call',who:{M:'Tanaka 田中',F:'Yamada 山田'},
+ lines:[['F','もしもし、山田です。','Hello, this is Yamada.'],
+  ['M','こんばんは、山田さん。','Good evening, Ms Yamada.'],
+  ['F','こんばんは。今 ちょっと いいですか。','Good evening. Do you have a moment?'],
+  ['M','はい、どうぞ。','Yes, go ahead.'],
+  ['F','あしたの かいぎは 何時からですか。','What time does tomorrow’s meeting start?'],
+  ['M','午前 10時からです。','It starts at 10 a.m.'],
+  ['F','わかりました。ありがとうございます。では、また。','I see. Thank you. Talk to you later.'],
+  ['M','では、また。','Bye for now.']],
+ quiz:[{q:'かいぎは いつですか。',opts:['あしたの 午前 10時','あしたの 午後 10時','今日の 午前 10時','今日の 午後 10時'],a:0},
+  {q:'山田さんは 何を 聞きましたか。',opts:['かいぎの 時間','かいぎの ばしょ','田中さんの 電話','駅の 名前'],a:0}],
+ keys:[['もしもし','Hello (on the phone)'],['今 ちょっと いいですか','Do you have a moment?'],['～は 何時からですか','What time does ~ start?']]},
+{id:'s8',title:'しゅうまつの 話',en:'Talking about the weekend',who:{M:'Tanaka 田中',F:'Yamada 山田'},
+ lines:[['M','山田さん、しゅうまつは 何を しましたか。','Ms Yamada, what did you do at the weekend?'],
+  ['F','日曜日に 友だちと うみへ 行きました。','On Sunday I went to the sea with a friend.'],
+  ['M','いいですね。天気は どうでしたか。','Nice. How was the weather?'],
+  ['F','とても いい 天気でした。でも、ちょっと さむかったです。','The weather was very good. But it was a bit cold.'],
+  ['F','田中さんは？','What about you?'],
+  ['M','わたしは どこも 行きませんでした。うちで 本を 読みました。','I didn’t go anywhere. I read books at home.']],
+ quiz:[{q:'山田さんは 日曜日に どこへ 行きましたか。',opts:['うみ','山','こうえん','デパート'],a:0},
+  {q:'田中さんは しゅうまつ 何を しましたか。',opts:['うちで 本を 読みました','うみへ 行きました','友だちに 会いました','えいがを 見ました'],a:0}],
+ keys:[['～は どうでしたか','How was ~?'],['どこも 行きませんでした','I didn’t go anywhere'],['さむかったです','It was cold (past of an い-adjective)']]},
+{id:'s9',title:'友だちの うちで',en:'Visiting a friend’s home',who:{M:'Tanaka 田中 (guest)',F:'Yamada 山田 (host)'},
+ lines:[['F','どうぞ、入ってください。','Please come in.'],
+  ['M','しつれいします。','Excuse me (for coming in).'],
+  ['F','どうぞ、すわってください。コーヒーと おちゃと どちらが いいですか。','Please sit down. Which would you like, coffee or tea?'],
+  ['M','おちゃを おねがいします。','Tea, please.'],
+  ['F','はい、どうぞ。','Here you are.'],
+  ['M','いただきます。…おいしいですね。','Thank you (before drinking). …It’s delicious.'],
+  ['F','ケーキも どうぞ。','Please have some cake too.'],
+  ['M','ありがとうございます。','Thank you very much.']],
+ quiz:[{q:'田中さんは 何を 飲みますか。',opts:['おちゃ','コーヒー','ジュース','水'],a:0},
+  {q:'うちに 入る とき、何と いいますか。',opts:['しつれいします','いってきます','いただきます','ただいま'],a:0}],
+ keys:[['入ってください','Please come in'],['しつれいします','Excuse me (entering a room or home)'],['いただきます','Said before eating or drinking']]},
+{id:'s10',title:'クラスで',en:'In class',who:{M:'Teacher 先生',F:'Student 学生'},
+ lines:[['M','みなさん、おはようございます。今日は 新しい かんじを べんきょうしましょう。','Good morning, everyone. Today let’s study some new kanji.'],
+  ['F','先生、すみません。もう少し ゆっくり 話してください。','Excuse me, teacher. Please speak a little more slowly.'],
+  ['M','はい、わかりました。…しゅくだいは あしたまでに 出してください。','Yes, of course. …Please hand in the homework by tomorrow.'],
+  ['F','先生、しゅくだいは むずかしいですか。','Teacher, is the homework difficult?'],
+  ['M','いいえ、かんたんですよ。','No, it’s easy.']],
+ quiz:[{q:'学生は 先生に 何と いいましたか。',opts:['もう少し ゆっくり 話してください','もう少し はやく 話してください','しゅくだいを ください','かんじを 書いてください'],a:0},
+  {q:'しゅくだいは いつまでに 出しますか。',opts:['あした','今日','来週','あさって'],a:0}],
+ keys:[['ゆっくり 話してください','Please speak slowly'],['もう いちど おねがいします','Once more, please'],['～までに 出してください','Please hand it in by ~']]}
+];
+
+/* =========================================================================
+   GAMES — addition 3. Two hand-written banks; the other three games are
+   generated from GRAMMAR, SCENES, VOCAB and KANJI.
+   PARTICLES  s = sentence with ＿＿ · a = the particle · d = 3 particles that
+              are WRONG in this sentence (other particles that would also be
+              grammatical are deliberately left out of d) · en = meaning + why
+   COUNTERS   w = the thing · en = English · c = its counter ·
+              alt = other counters that are also acceptable, never offered
+              as wrong answers
+   ========================================================================= */
+var PARTICLES = [
+{s:'毎日 コーヒー＿＿ 飲みます。',a:'を',d:['に','で','へ'],en:'I drink coffee every day. を marks what you drink.'},
+{s:'七時＿＿ おきます。',a:'に',d:['を','で','が'],en:'I get up at seven. に marks a clock time.'},
+{s:'としょかん＿＿ べんきょうします。',a:'で',d:['を','が','へ'],en:'I study at the library. で marks where an action happens.'},
+{s:'わたしは バス＿＿ 学校へ 行きます。',a:'で',d:['を','に','へ'],en:'I go to school by bus. で marks the means of transport.'},
+{s:'友だち＿＿ えいがを 見ました。',a:'と',d:['を','で','に'],en:'I watched a film with a friend. と = together with.'},
+{s:'これは わたし＿＿ 本です。',a:'の',d:['を','に','が'],en:'This is my book. の shows whose it is.'},
+{s:'つくえの 上＿＿ ねこが います。',a:'に',d:['を','で','が'],en:'There is a cat on the desk. に marks where something exists.'},
+{s:'わたしは 日本語＿＿ わかります。',a:'が',d:['を','に','で'],en:'I understand Japanese. わかります takes が.'},
+{s:'わたしは すし＿＿ 好きです。',a:'が',d:['を','に','で'],en:'I like sushi. 好き takes が.'},
+{s:'駅＿＿ 会社まで あるきます。',a:'から',d:['に','が','で'],en:'I walk from the station to the office. から = from.'},
+{s:'九時から 五時＿＿ はたらきます。',a:'まで',d:['を','が','の'],en:'I work from nine until five. まで = until.'},
+{s:'りんご＿＿ みかんを 買いました。',a:'と',d:['を','に','で'],en:'I bought apples and mandarins. と joins nouns.'},
+{s:'わたしは 学生です。友だち＿＿ 学生です。',a:'も',d:['を','に','で'],en:'I am a student. My friend is a student too. も = also.'},
+{s:'これは 何です＿＿。',a:'か',d:['を','に','で'],en:'What is this? か makes a question.'},
+{s:'いい 天気です＿＿。',a:'ね',d:['を','に','で'],en:'Nice weather, isn’t it? ね asks for agreement.'},
+{s:'ペン＿＿ 名前を 書いてください。',a:'で',d:['を','が','へ'],en:'Please write your name with a pen. で marks the tool.'},
+{s:'田中さん＿＿ 電話を かけました。',a:'に',d:['を','で','まで'],en:'I phoned Mr Tanaka. に marks who gets the call.'},
+{s:'母＿＿ てがみを 書きます。',a:'に',d:['を','で','まで'],en:'I write a letter to my mother. に marks who it goes to.'},
+{s:'先生＿＿ 本を もらいました。',a:'から',d:['を','で','へ'],en:'I received a book from the teacher. から marks the giver.'},
+{s:'きのう どこ＿＿ 行きましたか。',a:'へ',d:['を','で','が'],en:'Where did you go yesterday? へ marks the direction.'},
+{s:'だれ＿＿ 来ましたか。',a:'が',d:['を','に','で'],en:'Who came? After a question-word subject, use が.'},
+{s:'コーヒー＿＿ おちゃを 飲みますか。',a:'か',d:['を','に','で'],en:'Will you have coffee or tea? か between nouns = or.'},
+{s:'電車は バス＿＿ はやいです。',a:'より',d:['を','に','で'],en:'Trains are faster than buses. より = than.'},
+{s:'あした 友だち＿＿ 会います。',a:'に',d:['を','で','へ'],en:'I will meet a friend tomorrow. 会う takes に.'},
+{s:'駅で 電車＿＿ のります。',a:'に',d:['を','で','へ'],en:'I get on the train at the station. のる takes に.'},
+{s:'つぎの 駅で 電車＿＿ おります。',a:'を',d:['に','で','が'],en:'I get off the train at the next station. おりる takes を.'},
+{s:'へや＿＿ 入ります。',a:'に',d:['を','で','が'],en:'I go into the room. 入る takes に.'},
+{s:'八時に うち＿＿ 出ます。',a:'を',d:['に','で','が'],en:'I leave home at eight. 出る (leave a place) takes を.'},
+{s:'この 道＿＿ まっすぐ 行ってください。',a:'を',d:['に','が','の'],en:'Please go straight along this road. を marks the route.'},
+{s:'つぎの かど＿＿ 右に まがってください。',a:'を',d:['に','が','へ'],en:'Please turn right at the next corner. を marks the corner you go round.'},
+{s:'わたしは あに＿＿ 一人 います。',a:'が',d:['を','で','の'],en:'I have one older brother. The person who exists takes が.'},
+{s:'一週間＿＿ 二かい テニスを します。',a:'に',d:['を','が','の'],en:'I play tennis twice a week. に = per.'},
+{s:'日本＿＿ いちばん 高い 山は 何ですか。',a:'で',d:['を','が','へ'],en:'What is the highest mountain in Japan? で marks the group.'},
+{s:'たんじょうびに 母＿＿ はなを あげました。',a:'に',d:['を','で','から'],en:'I gave my mother flowers for her birthday. に marks the receiver.'},
+{s:'雨＿＿ ふっています。',a:'が',d:['を','に','で'],en:'It is raining. The rain is the subject, so が.'},
+{s:'テレビ＿＿ 見ながら ごはんを 食べます。',a:'を',d:['に','が','へ'],en:'I eat while watching television. を marks what you watch.'},
+{s:'この 本は 田中さん＿＿です。',a:'の',d:['を','に','で'],en:'This book is Mr Tanaka’s. の = belonging to.'},
+{s:'パン＿＿ ごはんと どちらが 好きですか。',a:'と',d:['を','に','で'],en:'Which do you like, bread or rice? AとBとどちら.'},
+{s:'わたしは ピアノ＿＿ ひくことが できます。',a:'を',d:['に','で','が'],en:'I can play the piano. ひく takes を.'},
+{s:'つくえの 上に 本＿＿ ノートが あります。',a:'や',d:['を','で','へ'],en:'There are books, notebooks and so on on the desk. や = and (among others).'},
+{s:'駅の 前＿＿ 友だちを まちます。',a:'で',d:['を','が','へ'],en:'I wait for my friend in front of the station. で marks where you do it.'},
+{s:'しゅくだいを して＿＿ テレビを 見ます。',a:'から',d:['を','に','が'],en:'I watch television after doing my homework. てから = after.'},
+{s:'あついです＿＿、まどを あけます。',a:'から',d:['を','に','へ'],en:'It is hot, so I will open the window. から = because.'},
+{s:'わたしは 大学＿＿ 学生です。',a:'の',d:['を','が','へ'],en:'I am a university student. の joins the two nouns.'},
+{s:'わたし＿＿ 日本人ではありません。',a:'は',d:['を','に','で'],en:'I am not Japanese. は marks the topic.'},
+{s:'ここ＿＿ しゃしんを とってもいいですか。',a:'で',d:['を','が','へ'],en:'May I take a photo here? で marks where you do it.'},
+{s:'ねこ＿＿ 二ひき います。',a:'が',d:['を','で','の'],en:'There are two cats. The animals that exist take が.'},
+{s:'父は 車＿＿ 会社へ 行きます。',a:'で',d:['を','が','に'],en:'My father goes to work by car. で marks the means.'},
+{s:'学校は 八時半＿＿ はじまります。',a:'に',d:['を','で','が'],en:'School starts at half past eight. に marks the time.'},
+{s:'えいがは 何時＿＿ おわりますか。',a:'に',d:['を','が','の'],en:'What time does the film finish? に marks the time.'},
+{s:'山田さんは 日本語＿＿ じょうずです。',a:'が',d:['を','に','で'],en:'Ms Yamada is good at Japanese. じょうず takes が.'},
+{s:'わたしは 山田さん＿＿ いっしょに 行きます。',a:'と',d:['を','で','が'],en:'I will go together with Ms Yamada. ～と いっしょに.'},
+{s:'きのうは どこ＿＿ 行きませんでした。',a:'も',d:['を','が','で'],en:'I did not go anywhere yesterday. どこも + negative = nowhere.'},
+{s:'へやに だれ＿＿ いません。',a:'も',d:['を','が','で'],en:'There is nobody in the room. だれも + negative = nobody.'},
+{s:'何＿＿ 食べませんでした。',a:'も',d:['を','が','に'],en:'I did not eat anything. 何も + negative = nothing.'}
+];
+
+var COUNTER_INFO = {
+  '～人':'counts people', '～まい':'counts flat, thin things', '～本':'counts long, thin things',
+  '～さつ':'counts books and magazines', '～だい':'counts machines and vehicles',
+  '～ひき':'counts small animals and fish', '～はい':'counts cups, glasses and bowls',
+  '～かい':'counts floors of a building (and times)', '～こ':'counts small, round objects',
+  '～つ':'counts things in general'
+};
+/* Wrong answers come only from these specific counters. ～つ and ～こ are
+   never offered as WRONG, because in casual speech they fit almost anything. */
+var COUNTER_WRONG = ['～人','～まい','～本','～さつ','～だい','～ひき','～はい','～かい'];
+var COUNTERS = [
+{w:'学生',en:'students',c:'～人'},{w:'子ども',en:'children',c:'～人'},{w:'先生',en:'teachers',c:'～人'},
+{w:'きって',en:'stamps',c:'～まい'},{w:'シャツ',en:'shirts',c:'～まい'},{w:'かみ',en:'sheets of paper',c:'～まい'},
+{w:'きっぷ',en:'tickets',c:'～まい'},{w:'しゃしん',en:'photographs',c:'～まい'},{w:'はがき',en:'postcards',c:'～まい'},
+{w:'ペン',en:'pens',c:'～本'},{w:'えんぴつ',en:'pencils',c:'～本'},{w:'かさ',en:'umbrellas',c:'～本'},
+{w:'ビール',en:'bottles of beer',c:'～本',alt:['～はい']},{w:'木',en:'trees',c:'～本'},
+{w:'本',en:'books',c:'～さつ'},{w:'ざっし',en:'magazines',c:'～さつ'},{w:'ノート',en:'notebooks',c:'～さつ'},{w:'じしょ',en:'dictionaries',c:'～さつ'},
+{w:'車',en:'cars',c:'～だい'},{w:'じてんしゃ',en:'bicycles',c:'～だい'},{w:'テレビ',en:'televisions',c:'～だい'},{w:'パソコン',en:'computers',c:'～だい'},
+{w:'ねこ',en:'cats',c:'～ひき'},{w:'いぬ',en:'dogs',c:'～ひき'},{w:'さかな',en:'fish',c:'～ひき'},
+{w:'コーヒー',en:'cups of coffee',c:'～はい',alt:['～本']},{w:'水',en:'glasses of water',c:'～はい',alt:['～本']},{w:'ごはん',en:'bowls of rice',c:'～はい'},
+{w:'りんご',en:'apples',c:'～こ',alt:['～つ']},{w:'たまご',en:'eggs',c:'～こ',alt:['～つ']},{w:'みかん',en:'mandarins',c:'～こ',alt:['～つ']},
+{w:'かばん',en:'bags',c:'～つ',alt:['～こ']},{w:'ビル',en:'floors of a building',c:'～かい'}
 ];
 
 /* @@DATA@@ — new content arrays go above this marker, before the engine runs */
@@ -3339,6 +3841,9 @@ function reinsert(id){
    Reviews are counted inside grade(); new items are counted here. */
 function applyGrade(id, g, wasNew){
   grade(id, g);
+  /* Any answered card counts as studying today, even if you leave the
+     session before the end — otherwise quitting early loses the streak. */
+  markStudiedToday();
   if (wasNew) state.day.newDone++;
   if (session) reinsert(id);
   saveState();
@@ -3363,6 +3868,8 @@ function render(name, opts){
   else if (screenName === 'session') html = screenSession();
   else if (screenName === 'exam' && typeof screenExam === 'function') html = screenExam();
   else if (screenName === 'listen' && typeof screenListen === 'function') html = screenListen();
+  else if (screenName === 'games' && typeof screenGames === 'function') html = screenGames();
+  else if (screenName === 'guide' && typeof screenGuide === 'function') html = screenGuide();
   main.innerHTML = html;
   $$('#nav button').forEach(function(b){
     b.setAttribute('aria-current', b.getAttribute('data-nav') === screenName ? 'true' : 'false');
@@ -3387,6 +3894,12 @@ function screenHome(){
          p.answered + ' answers</p></div>';
   }
 
+  if (s.started === 0){
+    h += '<div class="card" style="border-color:var(--accent)"><b>Welcome — new here?</b>' +
+         '<p class="muted" style="margin:6px 0 10px">Read the two-minute guide first: where to start, what to do ' +
+         'each day, and how to track your progress.</p>' +
+         '<button class="btn btn-primary btn-sm" data-nav="guide">📖 How to use this app</button></div>';
+  }
   h += '<h1>Today</h1>';
   h += '<p class="muted">' + (c.dueNow + c.newNow > 0
       ? c.dueNow + ' to review · ' + c.newNow + ' new'
@@ -3407,6 +3920,13 @@ function screenHome(){
        '<button class="btn btn-ghost" data-nav="listen" style="flex:1">🎧 Listening (聴解)</button>' +
        '<button class="btn btn-ghost" data-nav="exam" style="flex:1">Sit a mock N5 exam</button>' +
        '</div>';
+  h += '<div class="row" style="margin-top:10px">' +
+       '<button class="btn btn-ghost" data-act="go-talk" style="flex:1">💬 Conversations (会話)</button>' +
+       '<button class="btn btn-ghost" data-act="go-games" style="flex:1">🎮 Games</button>' +
+       '</div>';
+  h += '<div class="row" style="margin-top:10px">' +
+       '<button class="btn btn-ghost" data-nav="guide" style="flex:1">📖 How to use this app</button>' +
+       '</div>';
   var fromExam = taggedCount('from-mock-exam');
   if (fromExam){
     h += '<p class="tiny center" style="margin-top:8px">' + fromExam +
@@ -3420,6 +3940,13 @@ function screenHome(){
        stat(s.accuracy + '%', 'all-time accuracy') +
        '</div>';
 
+  var bkAgo = state.lastBackup ? daysBetween(state.lastBackup, dayKey()) : 999;
+  if (storageOK && s.started >= 30 && bkAgo >= 7){
+    h += '<div class="card" style="margin-top:16px;border-color:var(--accent)"><div class="spread"><b>Back up your progress</b>' +
+         '<button class="btn btn-sm btn-primary" data-nav="settings">Back up</button></div>' +
+         '<p class="muted tiny" style="margin:6px 0 0">' + (state.lastBackup ? 'Last backup ' + bkAgo + ' days ago.' :
+         'You have never saved a backup.') + ' One tap protects your streak and review schedule.</p></div>';
+  }
   if (!storageOK){
     h += '<div class="card" style="margin-top:16px;border-color:var(--bad)"><b>Progress is not being saved.</b>' +
          '<p class="muted" style="margin:6px 0 0">This browser blocked local storage. The app works, but your ' +
@@ -3860,7 +4387,8 @@ function stats(){
     total: ITEMS.length,
     started: started,
     due: dueCards().length,
-    streak: state.streak.count,
+    /* A streak is only alive if you studied today or yesterday. */
+    streak: (state.streak.last && daysBetween(state.streak.last, dayKey()) <= 1) ? state.streak.count : 0,
     accuracy: t ? Math.round(state.totals.right / t * 100) : 0,
     readiness: Math.round(ready * 100),
     answers: t
@@ -3955,7 +4483,8 @@ function topConfusions(){
 /* ---------- SETTINGS ---------- */
 function screenSettings(){
   var st = state.settings;
-  var h = '<h1>Settings</h1><div class="card">';
+  var h = '<h1>Settings</h1>' + (typeof backupCardHTML === 'function' ? backupCardHTML() : '') +
+          '<h2>Preferences</h2><div class="card">';
   h += settingRow('Theme',
     '<select data-set="theme"><option value="auto"' + sel(st.theme, 'auto') + '>Match system</option>' +
     '<option value="light"' + sel(st.theme, 'light') + '>Light</option>' +
@@ -4071,6 +4600,7 @@ document.addEventListener('click', function(ev){
 
 document.addEventListener('change', function(ev){
   var t = ev.target;
+  if (t && t.id === 'importFile' && typeof importFromFile === 'function'){ importFromFile(t); return; }
   var setKey = t.getAttribute && t.getAttribute('data-set');
   if (setKey){
     state.settings[setKey] = t.value;
@@ -4562,6 +5092,7 @@ function introContentHTML(item){
 /* ---------- Learn tabs ---------- */
 function learnExtraTabs(){
   var h = tabBtn('kanji', 'Kanji');
+  if (typeof SCENES !== 'undefined') h += tabBtn('talk', 'Conversations');
   if (typeof VOCAB !== 'undefined') h += tabBtn('vocab', 'Vocabulary');
   if (typeof GRAMMAR !== 'undefined') h += tabBtn('grammar', 'Grammar');
   if (typeof GRAMMAR !== 'undefined') h += tabBtn('conj', 'Conjugation');
@@ -4573,6 +5104,7 @@ function learnExtraHTML(tab){
   if (tab === 'vocab' && typeof vocabBrowserHTML === 'function') return vocabBrowserHTML();
   if (tab === 'grammar' && typeof grammarBrowserHTML === 'function') return grammarBrowserHTML();
   if (tab === 'conj' && typeof conjBrowserHTML === 'function') return conjBrowserHTML();
+  if (tab === 'talk' && typeof talkHTML === 'function') return talkHTML();
   return '';
 }
 
@@ -4642,6 +5174,9 @@ function onExtraAction(act, el){
   if (typeof onGrammarAction === 'function' && onGrammarAction(act, el)) return;
   if (typeof onExamAction === 'function' && onExamAction(act, el)) return;
   if (typeof onListenAction === 'function' && onListenAction(act, el)) return;
+  if (typeof onTalkAction === 'function' && onTalkAction(act, el)) return;
+  if (typeof onGameAction === 'function' && onGameAction(act, el)) return;
+  if (typeof onBackupAction === 'function' && onBackupAction(act, el)) return;
 }
 
 /* ---------- self test additions ---------- */
@@ -4727,6 +5262,9 @@ function contentSelfTest(add){
   if (typeof grammarSelfTest === 'function') grammarSelfTest(add);
   if (typeof sentenceSelfTest === 'function') sentenceSelfTest(add);
   if (typeof listeningSelfTest === 'function') listeningSelfTest(add);
+  if (typeof talkSelfTest === 'function') talkSelfTest(add);
+  if (typeof gamesSelfTest === 'function') gamesSelfTest(add);
+  if (typeof listenPaperSelfTest === 'function') listenPaperSelfTest(add);
 }
 
 /* =========================================================================
@@ -5212,6 +5750,22 @@ function allSentences(){
       for (j = 0; j < (L.lines || []).length; j++) lt.push(L.lines[j][1]);
       lt = lt.concat(L.opts);
       for (j = 0; j < lt.length; j++) out.push({ src: 'listening ' + L.id, jp: lt[j] });
+    }
+  }
+  if (typeof PARTICLES !== 'undefined'){
+    for (i = 0; i < PARTICLES.length; i++){
+      out.push({ src: 'particle game', jp: PARTICLES[i].s.replace('＿＿', PARTICLES[i].a) });
+    }
+  }
+  if (typeof SCENES !== 'undefined'){
+    for (i = 0; i < SCENES.length; i++){
+      var S = SCENES[i];
+      for (j = 0; j < S.lines.length; j++) out.push({ src: 'scene ' + S.id, jp: S.lines[j][1] });
+      for (j = 0; j < S.keys.length; j++) out.push({ src: 'scene phrase ' + S.id, jp: S.keys[j][0] });
+      for (j = 0; j < S.quiz.length; j++){
+        out.push({ src: 'scene quiz ' + S.id, jp: S.quiz[j].q });
+        for (var so = 0; so < S.quiz[j].opts.length; so++) out.push({ src: 'scene quiz ' + S.id, jp: S.quiz[j].opts[so] });
+      }
     }
   }
   if (typeof PARAPHRASE !== 'undefined'){
@@ -5883,16 +6437,21 @@ function buildExamSection(spec){
   return qs;
 }
 
-function startExam(){
+/* opt.paper = listening paper 1–5 (0 = no listening) · opt.listenOnly = skip
+   the two reading sections. NM.startExam() with no options is reading only. */
+function startExam(opt){
+  opt = opt || {};
   var sections = [];
-  for (var i = 0; i < EXAM_SPEC.sections.length; i++){
+  for (var i = 0; i < (opt.listenOnly ? 0 : EXAM_SPEC.sections.length); i++){
     var spec = EXAM_SPEC.sections[i];
     sections.push({ spec: spec, questions: buildExamSection(spec), answers: [],
                     endsAt: 0, closed: false, timedOut: false });
   }
+  if (opt.paper) sections.push(listenSection(opt.paper));
+  if (!sections.length) sections.push(listenSection(1));
   exam = { sections: sections, si: 0, qi: 0, finished: false, sel: -1,
-           startedAt: Date.now(), added: 0 };
-  exam.sections[0].endsAt = Date.now() + EXAM_SPEC.sections[0].minutes * 60000;
+           startedAt: Date.now(), added: 0, paper: opt.paper || (opt.listenOnly ? 1 : 0) };
+  exam.sections[0].endsAt = Date.now() + exam.sections[0].spec.minutes * 60000;
   startExamTimer();
   render('exam');
   var total = 0;
@@ -6000,7 +6559,7 @@ function examScore(listening){
               total: null, pass: false, fails: [] };
   for (i = 0; i < EXAM_SPEC.scoring.length; i++){
     var sp = EXAM_SPEC.scoring[i], row;
-    if (sp.administered){
+    if (byScoring[sp.key].total > 0){        /* this section was sat */
       var b2 = byScoring[sp.key];
       row = { key: sp.key, jp: sp.jp, label: sp.label, max: sp.max,
               right: b2.right, count: b2.total,
@@ -6008,7 +6567,7 @@ function examScore(listening){
               administered: true };
     } else {
       row = { key: sp.key, jp: sp.jp, label: sp.label, max: sp.max,
-              points: out.listening, administered: false };
+              points: (sp.key === 'listen' ? out.listening : null), administered: false };
     }
     out.sections.push(row);
   }
@@ -6022,6 +6581,11 @@ function examScore(listening){
     }
   }
   out.knownPoints = known;
+  out.knownMax = 0; out.missing = null;
+  for (i = 0; i < out.sections.length; i++){
+    if (out.sections[i].points === null || out.sections[i].points === undefined) out.missing = out.sections[i];
+    else out.knownMax += out.sections[i].max;
+  }
   if (!anyUnknown){
     out.total = known;
     if (out.total < EXAM_SPEC.pass.total){
@@ -6039,6 +6603,12 @@ function finishExam(){
   exam.finished = true;
   if (examTimer){ clearInterval(examTimer); examTimer = null; }
   exam.result = examScore(null);
+  if (typeof lsStop === 'function') lsStop();
+  if (exam.paper){
+    var lrow = exam.result.sections[1];
+    if (!state.lsPapers) state.lsPapers = {};
+    state.lsPapers[exam.paper] = { pts: lrow.points, right: lrow.right, of: lrow.count, date: dayKey() };
+  }
   exam.added = addMissedToSRS();
   markStudiedToday();
   saveState();
@@ -6088,8 +6658,7 @@ function examIntroHTML(){
        '<p class="muted tiny" style="margin:6px 0 0">Each section has its own clock. When it runs ' +
        'out the section closes and you cannot go back to it. Unanswered questions count as wrong. ' +
        'Everything you miss is added to your review queue at the end.</p></div>';
-  h += '<button class="btn-big" data-act="exam-start"><span class="jp">模擬試験</span>' +
-       'Start the exam — ' + qTotal + ' questions</button>';
+  h += examMenuHTML(qTotal);
   return h;
 }
 
@@ -6109,6 +6678,7 @@ function examQuestionHTML(){
   h += '<div class="spread" style="margin-bottom:6px"><span class="jp" style="font-size:15px">' +
        esc(part.jp) + '</span><span class="muted tiny">' + q.nInPart + ' / ' + part.n + '</span></div>';
   h += '<p class="tiny">' + esc(part.label) + '</p>';
+  if (q.listen) return h + examListenQHTML(q);
 
   if (q.passage){
     h += '<div class="card passage jp">' + esc(q.passage).replace(/\n/g, '<br>') + '</div>';
@@ -6146,7 +6716,7 @@ function examResultHTML(){
   var h = '<h1>Result</h1>';
   var verdict, cls;
   if (r.total === null){
-    verdict = 'Incomplete — no listening score';
+    verdict = 'Incomplete — ' + (r.missing ? r.missing.label : 'a section') + ' not sat';
     cls = '';
   } else {
     verdict = r.pass ? 'PASS' : 'FAIL';
@@ -6154,7 +6724,7 @@ function examResultHTML(){
   }
   h += '<div class="card"><div class="ring"><div class="big">' + r.knownPoints + '</div>' +
        '<div><b>' + esc(verdict) + '</b><div class="muted tiny">points scored on the sections ' +
-       'this app administers, out of ' + EXAM_SPEC.scoring[0].max + '</div></div></div></div>';
+       'you sat, out of ' + r.knownMax + '</div></div></div></div>';
 
   h += '<div class="card"><h3 style="margin-top:0">By scoring section</h3>';
   for (i = 0; i < r.sections.length; i++){
@@ -6177,15 +6747,15 @@ function examResultHTML(){
     h += '<p class="muted">Two conditions decide it, and one of them cannot be checked here:</p>';
     h += '<p>1. <b>' + EXAM_SPEC.pass.sectionMin + ' in every section.</b> ' +
          (r.fails.length ? '✗ ' + esc(r.fails.join('; ')) + '.'
-                         : '✓ Language Knowledge + Reading is above the minimum. Listening is untested.') + '</p>';
+                         : '✓ The section you sat is above the minimum. ' + (r.missing ? r.missing.label : '') + ' is untested.') + '</p>';
     h += '<p>2. <b>' + EXAM_SPEC.pass.total + ' points overall.</b> You have ' + r.knownPoints +
-         '. You would need <b>' + r.needed + ' of the ' + EXAM_SPEC.scoring[1].max +
-         ' listening points</b> to reach ' + EXAM_SPEC.pass.total + '. ' +
-         (r.needed > EXAM_SPEC.scoring[1].max
-           ? 'That is more than listening is worth, so this paper could not have passed.'
+         '. You would need <b>' + r.needed + ' of the ' + (r.missing ? r.missing.max + ' ' + r.missing.label : '') +
+         ' points</b> to reach ' + EXAM_SPEC.pass.total + '. ' +
+         (r.needed > (r.missing ? r.missing.max : 0)
+           ? 'That is more than the missing section is worth, so this paper could not have passed.'
            : r.needed === 0
              ? 'You are already past the total on this section alone.'
-             : 'Whether you passed depends on listening, which this app does not test.') + '</p>';
+             : 'Whether you passed depends on the section you did not sit.') + '</p>';
     h += '<p class="tiny">' + esc(EXAM_SPEC.listeningNote) + '</p>';
   } else {
     h += '<p class="' + (r.pass ? '' : 'muted') + '">' +
@@ -6240,17 +6810,28 @@ function examResultHTML(){
   }
   if (!missed) h += '<div class="card"><b>Nothing. You answered every question correctly.</b></div>';
 
-  h += '<div class="row"><button class="btn btn-primary" data-act="exam-start" style="flex:1">' +
+  h += '<div class="row"><button class="btn btn-primary" data-act="exam-menu" style="flex:1">' +
        'Sit a new paper</button>' +
        '<button class="btn btn-ghost" data-nav="home" style="flex:1">Back home</button></div>';
   return h;
 }
 
 function onExamAction(act, el){
-  if (act === 'exam-start'){ startExam(); return true; }
+  if (act === 'exam-start' || act === 'exam-listen'){
+    startExam({ paper: parseInt(el.getAttribute('data-p'), 10) || 0, listenOnly: act === 'exam-listen' });
+    examSpeak();
+    return true;
+  }
+  if (act === 'exam-menu'){ if (typeof lsStop === 'function') lsStop(); exam = null; render('exam'); return true; }
+  if (act === 'exam-play'){
+    var pq = currentExamQ();
+    if (pq && pq.listen){ pq.plays = (pq.plays || 0) + 1; speakSeq(pq.lq.parts); render('exam'); }
+    return true;
+  }
   if (act === 'exam-pick'){ answerExamQ(parseInt(el.getAttribute('data-i'), 10)); return true; }
-  if (act === 'exam-next'){ nextExamQ(); return true; }
+  if (act === 'exam-next'){ nextExamQ(); examSpeak(); return true; }
   if (act === 'exam-quit'){
+    if (typeof lsStop === 'function') lsStop();
     if (window.confirm('Abandon this exam? Your answers will be lost.')){
       if (examTimer){ clearInterval(examTimer); examTimer = null; }
       exam = null;
@@ -6746,7 +7327,7 @@ if (window.speechSynthesis && window.speechSynthesis.addEventListener){
   try {
     window.speechSynthesis.addEventListener('voiceschanged', function(){
       initVoices();
-      if (screenName === 'listen') render('listen');
+      if (screenName === 'listen' || (screenName === 'exam' && !exam)) render(screenName);
     });
   } catch (e){}
 }
@@ -6792,6 +7373,880 @@ function listeningSelfTest(add){
   add('Numbers drill: 300 generated questions, each with 4 options and one answer',
       bad.length === 0, bad.slice(0, 5).join(' · '));
 }
+
+/* =========================================================================
+   ADDITION 2 — CONVERSATION SCENES (会話)
+   Learn → Conversations. Three ways to use each scene:
+     Read   tap a line to hear it and see the English
+     Role-play  pick a speaker; their lines are hidden behind the English,
+            you say them out loud, then tap to check and hear the answer
+     Quiz   two comprehension questions, best score saved
+   ========================================================================= */
+var tk = { id: null, role: '', open: {}, allEn: false, quiz: null };
+
+function tkScene(id){
+  for (var i = 0; i < SCENES.length; i++) if (SCENES[i].id === id) return SCENES[i];
+  return null;
+}
+function tkState(){
+  if (!state.scenes) state.scenes = {};
+  return state.scenes;
+}
+function tkSay(s){ speakSeq(s); }
+
+function talkHTML(){
+  if (tk.id && tkScene(tk.id)) return tkSceneHTML(tkScene(tk.id));
+  var st = tkState();
+  var h = '<p class="muted">Everyday N5 conversations. Read and listen, role-play one speaker out loud, ' +
+          'then check you understood. Tap a scene.</p>';
+  for (var i = 0; i < SCENES.length; i++){
+    var s = SCENES[i], r = st[s.id];
+    h += '<button class="card" style="width:100%;text-align:left;cursor:pointer" data-act="tk-open" data-id="' + s.id + '">' +
+         '<div class="spread"><b class="jp" style="font-size:19px">' + esc(s.title) + '</b>' +
+         '<span class="pill' + (r ? ' on' : '') + '">' +
+         (r && r.best !== undefined ? 'quiz ' + r.best + '/' + s.quiz.length : r ? 'read' : 'new') + '</span></div>' +
+         '<div class="muted tiny">' + esc(s.en) + ' · ' + s.lines.length + ' lines</div></button>';
+  }
+  return h;
+}
+
+function tkSceneHTML(s){
+  var st = tkState();
+  if (!st[s.id]){ st[s.id] = {}; saveState(); }
+  var h = '<button class="btn btn-ghost btn-sm" data-act="tk-back">← All conversations</button>';
+  h += '<h2 class="jp" style="margin-top:12px">' + esc(s.title) + '</h2><p class="muted">' + esc(s.en) + '</p>';
+
+  if (tk.quiz) return h + tkQuizHTML(s);
+
+  h += '<button class="btn btn-primary ls-play audio-btn" data-act="tk-play">▶ Play the whole conversation</button>';
+  h += '<div class="row" style="margin:12px 0 6px">' +
+       '<button class="btn btn-sm' + (!tk.role ? ' btn-primary' : ' btn-ghost') + '" data-act="tk-role" data-r="">Read</button>' +
+       '<button class="btn btn-sm' + (tk.role === 'M' ? ' btn-primary' : ' btn-ghost') + '" data-act="tk-role" data-r="M">Be ' + esc(s.who.M) + '</button>' +
+       '<button class="btn btn-sm' + (tk.role === 'F' ? ' btn-primary' : ' btn-ghost') + '" data-act="tk-role" data-r="F">Be ' + esc(s.who.F) + '</button>' +
+       '</div>';
+  h += '<p class="tiny">' + (tk.role
+       ? 'Role-play: your lines are hidden. Read the English, say the Japanese out loud, then tap to check.'
+       : 'Tap any line to hear it and see the English.') +
+       ' <button class="btn btn-sm btn-ghost" data-act="tk-en">' + (tk.allEn ? 'Hide' : 'Show') + ' all English</button></p>';
+
+  h += '<div class="card">';
+  for (var i = 0; i < s.lines.length; i++){
+    var L = s.lines[i], mine = tk.role && L[0] === tk.role, open = !!tk.open[i];
+    h += '<div class="tk-line' + (mine ? ' me' : '') + '"><span class="who">' + esc(s.who[L[0]]) + '</span>' +
+         '<button class="body" data-act="tk-line" data-i="' + i + '">';
+    if (mine && !open){
+      h += '<span class="en">' + esc(L[2]) + '</span><span class="hide">Say it, then tap to check</span>';
+    } else {
+      h += '<span class="jp">' + esc(L[1]) + '</span>' +
+           ((open || tk.allEn || mine) ? '<span class="en">' + esc(L[2]) + '</span>' : '');
+    }
+    h += '</button></div>';
+  }
+  h += '</div>';
+
+  h += '<div class="card"><div class="prompt-label">Useful phrases</div>';
+  for (var k = 0; k < s.keys.length; k++){
+    h += '<div class="tk-line"><button class="body" data-act="tk-key" data-i="' + k + '">' +
+         '<span class="jp">' + esc(s.keys[k][0]) + '</span><span class="en">' + esc(s.keys[k][1]) + '</span></button></div>';
+  }
+  h += '</div>';
+  h += '<button class="btn btn-primary" style="width:100%" data-act="tk-quiz">Check your understanding — ' +
+       s.quiz.length + ' questions</button>';
+  return h;
+}
+
+function tkQuizHTML(s){
+  var z = tk.quiz, q = s.quiz[z.i], i;
+  var h = '<div class="spread"><span class="pill">Question ' + (z.i + 1) + ' / ' + s.quiz.length + '</span>' +
+          '<span class="pill">' + z.right + ' right</span></div>';
+  h += '<div class="prompt" style="min-height:110px;margin-top:10px"><div class="jp-sentence">' + esc(q.q) + '</div></div>';
+  h += '<div class="choices' + choiceSize(z.order) + '">';
+  for (i = 0; i < z.order.length; i++){
+    var cls = 'choice jp';
+    if (z.locked){
+      if (z.order[i] === q.opts[q.a]) cls += ' correct';
+      else if (i === z.chosen) cls += ' wrong';
+    }
+    h += '<button class="' + cls + '" data-act="tk-pick" data-i="' + i + '"><span class="num">' + (i + 1) + '</span>' +
+         esc(z.order[i]) + '</button>';
+  }
+  h += '</div>';
+  if (z.locked){
+    var ok = z.order[z.chosen] === q.opts[q.a];
+    h += '<div class="feedback ' + (ok ? 'good' : 'bad') + '" style="margin-top:12px">' + (ok ? '✓ ' : '✗ ') +
+         'The answer is ' + esc(q.opts[q.a]) + '.</div>';
+    h += '<button class="btn btn-primary" style="width:100%" data-act="tk-qnext">' +
+         (z.i + 1 < s.quiz.length ? 'Next question' : 'Finish') + '</button>';
+  }
+  h += '<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px" data-act="tk-qstop">Back to the conversation</button>';
+  return h;
+}
+
+function tkNewQuiz(s, i, right){
+  tk.quiz = { i: i, right: right, chosen: -1, locked: false, order: shuffle(s.quiz[i].opts.slice()) };
+}
+
+function onTalkAction(act, el){
+  var s = tk.id ? tkScene(tk.id) : null, i = parseInt(el.getAttribute('data-i'), 10);
+  function show(){ learnTab = 'talk'; render('learn'); }
+  if (act === 'go-talk'){ session = null; tk.id = null; tk.quiz = null; show(); return true; }
+  if (act === 'tk-open'){ tk.id = el.getAttribute('data-id'); tk.role = ''; tk.open = {}; tk.quiz = null; show(); return true; }
+  if (act === 'tk-back'){ lsStop(); tk.id = null; tk.quiz = null; show(); return true; }
+  if (!s) return false;
+  if (act === 'tk-play'){
+    tkSay(s.lines.map(function(L){ return { s: L[0], t: L[1] }; }));
+    return true;
+  }
+  if (act === 'tk-line'){
+    tk.open[i] = !tk.open[i] || (tk.role && s.lines[i][0] === tk.role);
+    show();
+    tkSay([{ s: s.lines[i][0], t: s.lines[i][1] }]);
+    return true;
+  }
+  if (act === 'tk-key'){ tkSay([{ s: 'N', t: s.keys[i][0].replace(/～/g, '') }]); return true; }
+  if (act === 'tk-role'){ tk.role = el.getAttribute('data-r') || ''; tk.open = {}; show(); return true; }
+  if (act === 'tk-en'){ tk.allEn = !tk.allEn; show(); return true; }
+  if (act === 'tk-quiz'){ lsStop(); tkNewQuiz(s, 0, 0); show(); return true; }
+  if (act === 'tk-qstop'){ tk.quiz = null; show(); return true; }
+  if (act === 'tk-pick'){
+    if (!tk.quiz || tk.quiz.locked) return true;
+    tk.quiz.chosen = i; tk.quiz.locked = true;
+    var q = s.quiz[tk.quiz.i];
+    if (tk.quiz.order[i] === q.opts[q.a]){ tk.quiz.right++; sndOk(); } else sndNo();
+    show();
+    return true;
+  }
+  if (act === 'tk-qnext'){
+    var z = tk.quiz;
+    if (z.i + 1 < s.quiz.length){ tkNewQuiz(s, z.i + 1, z.right); show(); return true; }
+    var st = tkState();
+    st[s.id].best = Math.max(st[s.id].best || 0, z.right);
+    markStudiedToday();
+    saveState();
+    toast('Quiz done: ' + z.right + ' / ' + s.quiz.length);
+    if (z.right === s.quiz.length) sndDone();
+    tk.quiz = null;
+    show();
+    return true;
+  }
+  return false;
+}
+
+function talkSelfTest(add){
+  var bad = [], ids = {}, i, j, s;
+  for (i = 0; i < SCENES.length; i++){
+    s = SCENES[i];
+    if (ids[s.id]) bad.push('duplicate ' + s.id); ids[s.id] = 1;
+    if (!s.title || !s.en || !s.who || !s.who.M || !s.who.F) bad.push(s.id + ' header');
+    for (j = 0; j < s.lines.length; j++){
+      var L = s.lines[j];
+      if (L.length !== 3 || !s.who[L[0]] || !L[1] || !L[2]) bad.push(s.id + ' line ' + (j + 1));
+    }
+    for (j = 0; j < s.quiz.length; j++){
+      var q = s.quiz[j];
+      if (!q.q || q.opts.length !== 4 || !(q.a >= 0 && q.a < 4)) bad.push(s.id + ' quiz ' + (j + 1));
+      var seen = {};
+      for (var k = 0; k < q.opts.length; k++){ if (seen[q.opts[k]]) bad.push(s.id + ' quiz repeats'); seen[q.opts[k]] = 1; }
+    }
+    if (!s.keys || !s.keys.length) bad.push(s.id + ' has no phrases');
+  }
+  add('SCENES are complete: speakers, English for every line, answerable quizzes',
+      bad.length === 0, bad.join(' · ') || SCENES.length + ' scenes');
+}
+
+/* =========================================================================
+   ADDITION 3 — GAMES (ゲーム). Five short games, 10 questions a round (the
+   speed round is 60 seconds). Best scores are kept in state.games.
+   ========================================================================= */
+var GAME_LIST = [
+  {key:'build', jp:'文の組み立て', label:'Sentence builder', hint:'Tap the pieces into the right order. Trains the exam’s 問題2.'},
+  {key:'part',  jp:'じょし', label:'Particle challenge', hint:'は が を に で へ と も… pick the one that fits.'},
+  {key:'count', jp:'かぞえかた', label:'Counter match', hint:'Which counter goes with cats, pens, books, cars…?'},
+  {key:'pairs', jp:'ペア', label:'Kanji word pairs', hint:'Match five words to their readings against the clock.'},
+  {key:'speed', jp:'スピード', label:'60-second speed round', hint:'As many meanings as you can in one minute.'}
+];
+var GM_ROUND = 10, GM_SECONDS = 60;
+var gm = null, gmTimer = null, SB_POOL = null;
+
+function gmState(){
+  if (!state.games) state.games = { best: {}, plays: 0 };
+  return state.games;
+}
+
+/* ---- sentence builder pool: every one-sentence example with 3–6 phrases ---- */
+function sbInit(){
+  if (SB_POOL) return SB_POOL;
+  SB_POOL = [];
+  var src = [], i, j;
+  for (i = 0; i < GRAMMAR.length; i++) for (j = 0; j < GRAMMAR[i].ex.length; j++) src.push([GRAMMAR[i].ex[j].jp, GRAMMAR[i].ex[j].en]);
+  for (i = 0; i < SCENES.length; i++) for (j = 0; j < SCENES[i].lines.length; j++) src.push([SCENES[i].lines[j][1], SCENES[i].lines[j][2]]);
+  for (i = 0; i < src.length; i++){
+    var t = src[i][0].trim(), end = '';
+    if (/[。？！]$/.test(t)){ end = t.slice(-1); t = t.slice(0, -1); }
+    if (/[。？！…]/.test(t)) continue;               /* more than one sentence */
+    var ch = t.split(' ').filter(function(x){ return x.length > 0; });
+    if (ch.length < 3 || ch.length > 6) continue;
+    SB_POOL.push({ chunks: ch, end: end, en: src[i][1] });
+  }
+  return SB_POOL;
+}
+
+/* ---- one question per game type ---- */
+function gmMcq(correct, wrongs){
+  return shuffle([correct].concat(wrongs)).map(function(t){ return { text: t, ok: t === correct }; });
+}
+
+function gmNextQ(){
+  var used = gm.used;
+  if (gm.mode === 'build'){
+    var s = pickUnused(sbInit(), used, function(x){ return x.chunks.join(''); });
+    var tiles = s.chunks.map(function(t){ return { t: t, used: false }; }), k = 0;
+    do { shuffle(tiles); } while (k++ < 8 && tiles.map(function(x){ return x.t; }).join(' ') === s.chunks.join(' '));
+    gm.q = { kind: 'build', s: s, tiles: tiles, built: [] };
+  } else if (gm.mode === 'part'){
+    var p = pickUnused(PARTICLES, used, function(x){ return x.s; });
+    gm.q = { kind: 'mcq', prompt: p.s, sub: '', opts: gmMcq(p.a, p.d),
+             explain: p.s.replace('＿＿', p.a) + '  —  ' + p.en };
+  } else if (gm.mode === 'count'){
+    var c = pickUnused(COUNTERS, used, function(x){ return x.w + x.en; });
+    var pool = COUNTER_WRONG.filter(function(x){ return x !== c.c && (c.alt || []).indexOf(x) < 0; });
+    gm.q = { kind: 'mcq', prompt: c.w, sub: 'How do you count ' + c.en + '?', opts: gmMcq(c.c, shuffle(pool).slice(0, 3)),
+             explain: c.w + ' (' + c.en + ') → ' + c.c + ', which ' + COUNTER_INFO[c.c] + '.' +
+                      (c.alt ? ' ' + c.alt.join(' / ') + ' is also heard.' : '') };
+  } else if (gm.mode === 'speed'){
+    var items = [], id;
+    for (id in state.cards) if (ITEM_BY_ID[id] && (ITEM_BY_ID[id].type === 'vocab' || ITEM_BY_ID[id].type === 'kanji')) items.push(ITEM_BY_ID[id]);
+    if (items.length < 20) items = ITEMS.filter(function(it){ return it.type === 'vocab' || it.type === 'kanji'; });
+    var it = pick(items), bq = buildQuestion(it, it.type === 'kanji' ? 'k2m' : 'j2e');
+    gm.q = { kind: 'mcq', prompt: bq.prompt, big: it.type === 'kanji', sub: '', opts: bq.options, explain: bq.explain };
+  }
+  gm.locked = false; gm.chosen = -1;
+}
+
+function gmPairsRound(){
+  var cands = VOCAB.filter(function(v){ return v.w !== v.r && v.w.indexOf('～') < 0 && hasKanji(v.w) && v.r.length <= 6; });
+  shuffle(cands);
+  var words = [], seenW = {}, seenR = {};
+  for (var i = 0; i < cands.length && words.length < 5; i++){
+    if (seenW[cands[i].w] || seenR[cands[i].r]) continue;
+    seenW[cands[i].w] = seenR[cands[i].r] = 1;
+    words.push(cands[i]);
+  }
+  gm.words = words;
+  gm.L = shuffle([0, 1, 2, 3, 4]); gm.R = shuffle([0, 1, 2, 3, 4]);
+  gm.matched = {}; gm.sel = -1; gm.miss = 0; gm.flash = -1; gm.start = Date.now();
+}
+
+function gmStart(mode){
+  gm = { mode: mode, i: 0, right: 0, wrong: 0, used: {}, done: false };
+  if (mode === 'pairs') gmPairsRound();
+  else {
+    if (mode === 'speed') gm.end = Date.now() + GM_SECONDS * 1000;
+    gmNextQ();
+  }
+  render('games');
+}
+
+function gmFinish(){
+  if (!gm || gm.done) return;
+  gm.done = true;
+  if (gmTimer){ clearInterval(gmTimer); gmTimer = null; }
+  var st = gmState(), key = gm.mode;
+  if (key === 'pairs'){
+    gm.secs = Math.round((Date.now() - gm.start) / 1000);
+    gm.newBest = !st.best.pairs || gm.secs < st.best.pairs;
+    if (gm.newBest) st.best.pairs = gm.secs;
+  } else {
+    gm.newBest = gm.right > (st.best[key] || 0);
+    if (gm.newBest) st.best[key] = gm.right;
+  }
+  st.plays++;
+  markStudiedToday();
+  saveState();
+  sndDone();
+  if (screenName === 'games') render('games');
+}
+
+function gmTick(){
+  if (!gm || gm.mode !== 'speed' || gm.done || screenName !== 'games'){
+    clearInterval(gmTimer); gmTimer = null; return;
+  }
+  var left = gm.end - Date.now(), el = $('#gmClock');
+  if (el) el.textContent = Math.max(0, Math.ceil(left / 1000)) + 's';
+  if (left <= 0) gmFinish();
+}
+
+/* ---- screens ---- */
+function screenGames(){
+  var h = '<h1>Games <span class="jp muted" style="font-size:16px">ゲーム</span></h1>';
+  if (!gm) return h + gmHubHTML();
+  if (gm.done) return h + gmDoneHTML();
+  if (gm.mode === 'speed' && !gmTimer) gmTimer = setInterval(gmTick, 250);
+  if (gm.mode === 'pairs') return h + gmPairsHTML();
+  return h + gmPlayHTML();
+}
+
+function gmHubHTML(){
+  var st = gmState(), h = '<p class="muted">Short, focused drills for the things N5 tests most. ' +
+    'Ten questions a round; the speed round lasts one minute.</p>';
+  for (var i = 0; i < GAME_LIST.length; i++){
+    var g = GAME_LIST[i], b = st.best[g.key];
+    h += '<button class="card" style="width:100%;text-align:left;cursor:pointer" data-act="gm-start" data-g="' + g.key + '">' +
+         '<div class="spread"><b class="jp">' + esc(g.jp) + '</b><span class="pill' + (b ? ' on' : '') + '">' +
+         (b ? 'best ' + b + (g.key === 'pairs' ? 's' : g.key === 'speed' ? '' : '/' + GM_ROUND) : 'new') + '</span></div>' +
+         '<div style="font-weight:600;margin-top:4px">' + esc(g.label) + '</div>' +
+         '<div class="muted tiny">' + esc(g.hint) + '</div></button>';
+  }
+  return h;
+}
+
+function gmHeadHTML(){
+  var h = '<div class="spread">';
+  if (gm.mode === 'speed'){
+    h += '<span class="pill on">⏱ <span id="gmClock">' + Math.max(0, Math.ceil((gm.end - Date.now()) / 1000)) + 's</span></span>' +
+         '<span class="pill">' + gm.right + ' ✓ · ' + gm.wrong + ' ✗</span>';
+  } else {
+    h += '<span class="pill">' + Math.min(gm.i + 1, GM_ROUND) + ' / ' + GM_ROUND + '</span>' +
+         '<span class="pill">' + gm.right + ' right</span>';
+  }
+  return h + '</div>';
+}
+
+function gmPlayHTML(){
+  var q = gm.q, i, h = gmHeadHTML();
+  if (q.kind === 'build'){
+    h += '<div class="prompt" style="min-height:120px;margin-top:10px"><div class="prompt-label">Build this sentence</div>' +
+         '<div class="prompt-en-sm">' + esc(q.s.en) + '</div></div>';
+    h += '<div class="card sb-built">';
+    if (!q.built.length) h += '<span class="muted tiny">Tap the pieces below in order.</span>';
+    for (i = 0; i < q.built.length; i++){
+      h += '<button class="sb-tile on" data-act="gm-unbuild" data-i="' + i + '"' + (gm.locked ? ' disabled' : '') + '>' +
+           esc(q.tiles[q.built[i]].t) + '</button>';
+    }
+    if (gm.locked) h += '<span class="jp" style="font-size:20px">' + esc(q.s.end) + '</span>';
+    h += '</div><div class="sb-pool">';
+    for (i = 0; i < q.tiles.length; i++){
+      if (q.tiles[i].used) continue;
+      h += '<button class="sb-tile" data-act="gm-tile" data-i="' + i + '">' + esc(q.tiles[i].t) + '</button>';
+    }
+    h += '</div>';
+    if (gm.locked){
+      var ok = gm.lastOk;
+      h += '<div class="feedback ' + (ok ? 'good' : 'bad') + '" style="margin-top:12px">' + (ok ? '✓ ' : '✗ Correct order: ') +
+           '<b>' + esc(q.s.chunks.join(' ') + q.s.end) + '</b>' +
+           (ok ? '' : '<div class="tiny" style="color:inherit;margin-top:6px">Japanese is flexible about where time and ' +
+                 'place words go, so a different order can sometimes also be fine — but the verb always comes last.</div>') + '</div>';
+      h += '<button class="btn btn-primary" style="width:100%" data-act="gm-next">' + (gm.i + 1 < GM_ROUND ? 'Next' : 'See score') + '</button>';
+    } else if (q.built.length){
+      h += '<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px" data-act="gm-clear">Start again</button>';
+    }
+  } else {
+    h += '<div class="prompt" style="min-height:140px;margin-top:10px">' +
+         '<div class="' + (q.big ? 'jp-huge jp' : q.prompt.length > 8 ? 'jp-sentence' : 'jp-mid jp') + '">' + esc(q.prompt) + '</div>' +
+         (q.sub ? '<div class="muted" style="margin-top:6px">' + esc(q.sub) + '</div>' : '') + '</div>';
+    h += '<div class="choices' + (gm.mode === 'speed' ? choiceSize(q.opts) : choiceSize(q.opts)) + '">';
+    for (i = 0; i < q.opts.length; i++){
+      var cls = 'choice' + (gm.mode === 'speed' ? '' : ' jp');
+      if (gm.locked){ if (q.opts[i].ok) cls += ' correct'; else if (i === gm.chosen) cls += ' wrong'; }
+      h += '<button class="' + cls + '" data-act="gm-pick" data-i="' + i + '"><span class="num">' + (i + 1) + '</span>' +
+           esc(q.opts[i].text) + '</button>';
+    }
+    h += '</div>';
+    if (gm.locked){
+      var ok2 = q.opts[gm.chosen] && q.opts[gm.chosen].ok;
+      h += '<div class="feedback ' + (ok2 ? 'good' : 'bad') + '" style="margin-top:12px">' + (ok2 ? '✓ ' : '✗ ') + esc(q.explain) + '</div>';
+      h += '<button class="btn btn-primary" style="width:100%" data-act="gm-next">' + (gm.i + 1 < GM_ROUND ? 'Next' : 'See score') + '</button>';
+    }
+  }
+  h += '<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px" data-act="gm-hub">Quit to games</button>';
+  return h;
+}
+
+function gmPairsHTML(){
+  var h = '<div class="spread"><span class="pill">' + Object.keys(gm.matched).length + ' / 5 matched</span>' +
+          '<span class="pill">' + gm.miss + ' misses</span></div>';
+  h += '<p class="muted tiny" style="margin-top:8px">Tap a word on the left, then its reading on the right.</p><div class="pairs"><div class="col">';
+  var i, w;
+  for (i = 0; i < 5; i++){
+    w = gm.L[i];
+    h += '<button class="choice jp pr' + (gm.matched[w] ? ' correct' : gm.sel === w ? ' picked' : '') + '" data-act="gm-pl" data-i="' + w + '"' +
+         (gm.matched[w] ? ' disabled' : '') + '>' + esc(gm.words[w].w) + '</button>';
+  }
+  h += '</div><div class="col">';
+  for (i = 0; i < 5; i++){
+    w = gm.R[i];
+    h += '<button class="choice jp pr' + (gm.matched[w] ? ' correct' : gm.flash === w ? ' wrong' : '') + '" data-act="gm-pr" data-i="' + w + '"' +
+         (gm.matched[w] ? ' disabled' : '') + '>' + esc(gm.words[w].r) + '</button>';
+  }
+  h += '</div></div>';
+  h += '<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:14px" data-act="gm-hub">Quit to games</button>';
+  return h;
+}
+
+function gmDoneHTML(){
+  var g = null, i, st = gmState();
+  for (i = 0; i < GAME_LIST.length; i++) if (GAME_LIST[i].key === gm.mode) g = GAME_LIST[i];
+  var h = '<div class="card center"><div class="prompt-label jp">' + esc(g.jp) + ' · ' + esc(g.label) + '</div>';
+  if (gm.mode === 'pairs'){
+    h += '<div class="ring" style="justify-content:center"><div class="big">' + gm.secs + 's</div></div>' +
+         '<p class="muted">' + gm.miss + ' miss' + (gm.miss === 1 ? '' : 'es') + ' · best ' + st.best.pairs + 's' +
+         (gm.newBest ? ' — new best!' : '') + '</p></div>';
+    h += '<div class="card"><div class="prompt-label">The five words</div>';
+    for (i = 0; i < gm.words.length; i++){
+      h += '<div class="spread" style="padding:4px 0"><span class="jp" style="font-size:20px">' + esc(gm.words[i].w) +
+           ' <span class="muted" style="font-size:14px">' + esc(gm.words[i].r) + '</span></span>' +
+           '<span class="muted tiny">' + esc(gm.words[i].en) + '</span></div>';
+    }
+    h += '</div>';
+  } else {
+    h += '<div class="ring" style="justify-content:center"><div class="big">' + gm.right +
+         (gm.mode === 'speed' ? '' : ' / ' + GM_ROUND) + '</div></div>' +
+         '<p class="muted">' + (gm.mode === 'speed' ? gm.right + ' right, ' + gm.wrong + ' wrong in ' + GM_SECONDS + ' seconds · ' : '') +
+         'best ' + (st.best[gm.mode] || 0) + (gm.newBest ? ' — new best!' : '') + '</p></div>';
+  }
+  h += '<div class="row"><button class="btn btn-primary" style="flex:1" data-act="gm-start" data-g="' + gm.mode + '">Play again</button>' +
+       '<button class="btn btn-ghost" style="flex:1" data-act="gm-hub">All games</button></div>';
+  return h;
+}
+
+function onGameAction(act, el){
+  var i = parseInt(el.getAttribute('data-i'), 10);
+  if (act === 'go-games'){ session = null; gm = null; render('games'); return true; }
+  if (act === 'gm-start'){ gmStart(el.getAttribute('data-g')); return true; }
+  if (act === 'gm-hub'){ if (gmTimer){ clearInterval(gmTimer); gmTimer = null; } gm = null; render('games'); return true; }
+  if (!gm || gm.done) return false;
+  if (act === 'gm-pick'){
+    if (gm.locked || !gm.q.opts[i]) return true;
+    var ok = gm.q.opts[i].ok;
+    if (ok){ gm.right++; sndOk(); } else { gm.wrong++; sndNo(); }
+    if (gm.mode === 'speed'){
+      if (Date.now() >= gm.end){ gmFinish(); return true; }
+      gmNextQ(); render('games'); return true;     /* no pause: keep the pace up */
+    }
+    gm.locked = true; gm.chosen = i;
+    render('games');
+    return true;
+  }
+  if (act === 'gm-tile' && gm.q && gm.q.kind === 'build' && !gm.locked){
+    gm.q.tiles[i].used = true; gm.q.built.push(i);
+    if (gm.q.built.length === gm.q.tiles.length){
+      var made = gm.q.built.map(function(b){ return gm.q.tiles[b].t; }).join(' ');
+      gm.lastOk = made === gm.q.s.chunks.join(' ');
+      if (gm.lastOk){ gm.right++; sndOk(); } else { gm.wrong++; sndNo(); }
+      gm.locked = true;
+    }
+    render('games');
+    return true;
+  }
+  if (act === 'gm-unbuild' && gm.q && gm.q.kind === 'build' && !gm.locked){
+    var t = gm.q.built.splice(i, 1)[0];
+    gm.q.tiles[t].used = false;
+    render('games');
+    return true;
+  }
+  if (act === 'gm-clear' && gm.q && gm.q.kind === 'build' && !gm.locked){
+    for (var c = 0; c < gm.q.tiles.length; c++) gm.q.tiles[c].used = false;
+    gm.q.built = [];
+    render('games');
+    return true;
+  }
+  if (act === 'gm-next'){
+    gm.i++;
+    if (gm.i >= GM_ROUND){ gmFinish(); return true; }
+    gmNextQ(); render('games');
+    return true;
+  }
+  if (act === 'gm-pl'){ gm.sel = i; gm.flash = -1; render('games'); return true; }
+  if (act === 'gm-pr'){
+    if (gm.sel < 0){ toast('Tap a word on the left first.'); return true; }
+    if (gm.sel === i){
+      gm.matched[i] = 1; gm.sel = -1; gm.flash = -1; sndOk();
+      if (Object.keys(gm.matched).length === 5){ gmFinish(); return true; }
+    } else { gm.miss++; gm.flash = i; sndNo(); }
+    render('games');
+    return true;
+  }
+  return false;
+}
+
+function gamesSelfTest(add){
+  var bad = [], i, p, seen = {};
+  for (i = 0; i < PARTICLES.length; i++){
+    p = PARTICLES[i];
+    if (seen[p.s]) bad.push('duplicate: ' + p.s); seen[p.s] = 1;
+    if (p.s.split('＿＿').length !== 2) bad.push(p.s + ' needs exactly one blank');
+    if (!p.d || p.d.length !== 3 || p.d.indexOf(p.a) >= 0) bad.push(p.s + ' wrong answers');
+    if (!p.en) bad.push(p.s + ' no explanation');
+  }
+  for (i = 0; i < COUNTERS.length; i++){
+    var c = COUNTERS[i];
+    if (!COUNTER_INFO[c.c]) bad.push(c.w + ' unknown counter ' + c.c);
+    if ((c.alt || []).indexOf(c.c) >= 0) bad.push(c.w + ' alt repeats the answer');
+    var pool = COUNTER_WRONG.filter(function(x){ return x !== c.c && (c.alt || []).indexOf(x) < 0; });
+    if (pool.length < 3) bad.push(c.w + ' not enough wrong counters');
+  }
+  add('Particle and counter banks are answerable', bad.length === 0,
+      bad.join(' · ') || PARTICLES.length + ' particle questions · ' + COUNTERS.length + ' counter items');
+
+  bad = [];
+  var sb = sbInit();
+  if (sb.length < 100) bad.push('only ' + sb.length + ' sentences');
+  var saveGm = gm, saveCards = state.cards;
+  gm = { mode: 'pairs' };
+  for (i = 0; i < 100; i++){
+    gmPairsRound();
+    var ws = {}, rs = {};
+    for (var k = 0; k < gm.words.length; k++){ ws[gm.words[k].w] = 1; rs[gm.words[k].r] = 1; }
+    if (gm.words.length !== 5 || Object.keys(ws).length !== 5 || Object.keys(rs).length !== 5) bad.push('pairs round not unique');
+  }
+  gm = { mode: 'speed', used: {} };
+  for (i = 0; i < 100; i++){
+    gmNextQ();
+    var right = gm.q.opts.filter(function(o){ return o.ok; }).length;
+    if (gm.q.opts.length !== 4 || right !== 1) bad.push('speed question has ' + gm.q.opts.length + ' options');
+  }
+  gm = saveGm; state.cards = saveCards;
+  add('Games generate clean rounds: sentence builder, pairs, speed', bad.length === 0,
+      bad.slice(0, 5).join(' · ') || sb.length + ' sentences for the builder');
+}
+
+/* =========================================================================
+   MOCK EXAM — 聴解 SECTION. Five fixed papers. Paper p takes items
+   (p-1)*n … p*n-1 of each question type in LISTENING order, so with the bank
+   at 35/30/25/30 the five papers share no questions at all.
+   ========================================================================= */
+function listenSection(p){
+  var L = EXAM_SPEC.listening, qs = [], i, k, o;
+  for (i = 0; i < L.parts.length; i++){
+    var part = L.parts[i], pool = [];
+    for (k = 0; k < LISTENING.length; k++) if (LISTENING[k].type === part.key) pool.push(LISTENING[k]);
+    for (k = 0; k < part.n; k++){
+      var it = pool[((p - 1) * part.n + k) % pool.length], lq = lsQuestionFrom(it), opts = [], ans = -1;
+      for (o = 0; o < lq.opts.length; o++){ opts.push(lq.opts[o].text); if (lq.opts[o].ok) ans = o; }
+      qs.push({ part: 'listen', listen: true, lq: lq, item: it, partSpec: part, nInPart: k + 1,
+                opts: opts, ans: ans, plays: 0, text: it.q || it.sitEn || it.say, explain: it.en, items: [] });
+    }
+  }
+  return { spec: L, questions: qs, answers: [], endsAt: 0, closed: false, timedOut: false };
+}
+
+/* Play the current listening question. Called from a tap, so audio is allowed. */
+function examSpeak(){
+  var q = currentExamQ();
+  if (q && q.listen){ q.plays = (q.plays || 0) + 1; speakSeq(q.lq.parts); render('exam'); }
+  else if (typeof lsStop === 'function') lsStop();
+}
+
+function examListenQHTML(q){
+  var lq = q.lq, hidden = (lq.type === 'utter' || lq.type === 'resp'), i;
+  var h = '<div class="prompt" style="min-height:110px">';
+  if (lq.type === 'task' || lq.type === 'point'){
+    h += '<div class="prompt-label">Question — it is also spoken</div><div class="jp-sentence">' + esc(lq.item.q) + '</div>';
+  } else if (lq.type === 'utter'){
+    h += '<div class="prompt-label">Situation</div><div class="prompt-en-sm">' + esc(lq.item.sitEn) + '</div>' +
+         '<div class="muted tiny">Three phrases are spoken. Which one do you say?</div>';
+  } else {
+    h += '<div class="prompt-label">Listen</div><div class="prompt-en-sm">One line, then three replies.</div>' +
+         '<div class="muted tiny">Nothing is printed, exactly as in the exam.</div>';
+  }
+  h += '</div>';
+  if (!jaVoices.length) h += '<div class="feedback bad">No Japanese voice on this device, so this question cannot be played.</div>';
+  h += '<button class="btn btn-primary ls-play" data-act="exam-play">▶ ' + (q.plays ? 'Play again' : 'Play') + '</button>';
+  h += '<div class="choices' + (hidden ? '' : choiceSize(q.opts)) + '" style="margin-top:12px">';
+  for (i = 0; i < q.opts.length; i++){
+    h += '<button class="choice' + (hidden ? ' big-num' : ' jp') + (exam.sel === i ? ' picked' : '') +
+         '" data-act="exam-pick" data-i="' + i + '">' +
+         (hidden ? (i + 1) : '<span class="num">' + (i + 1) + '</span>' + esc(q.opts[i])) + '</button>';
+  }
+  h += '</div>';
+  h += '<button class="btn btn-primary" style="width:100%;margin-top:12px" data-act="exam-next">' +
+       (exam.sel < 0 ? 'Skip this question' : 'Next question') + '</button>';
+  h += '<p class="tiny center">The real exam plays each recording once. No going back.</p>';
+  h += '<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" data-act="exam-quit">Abandon this exam</button>';
+  return h;
+}
+
+function examMenuHTML(qTotal){
+  var L = EXAM_SPEC.listening, done = state.lsPapers || {}, n = 0, i, next = 0, h = '';
+  for (i = 0; i < L.parts.length; i++) n += L.parts[i].n;
+  for (i = 1; i <= L.papers; i++) if (!done[i]){ next = i; break; }
+  if (!next) next = 1 + Math.floor(Math.random() * L.papers);
+  h += '<div class="card"><div class="spread"><b class="jp">' + esc(L.jp) + '</b><span class="pill on">' + L.minutes + ' min</span></div>' +
+       '<div class="muted tiny" style="margin-bottom:8px">' + esc(L.label) + ' · ' + n + ' questions · ' +
+       L.papers + ' different papers</div>';
+  for (i = 0; i < L.parts.length; i++){
+    h += '<div class="spread" style="padding:3px 0"><span class="jp" style="font-size:15px">' + esc(L.parts[i].jp) +
+         '</span><span class="muted tiny">' + L.parts[i].n + '</span></div>';
+  }
+  h += '</div>';
+  if (!jaVoices.length){
+    return h + lsNoVoiceHTML() + '<button class="btn-big" data-act="exam-start"><span class="jp">模擬試験</span>' +
+           'Start without listening — ' + qTotal + ' questions</button>';
+  }
+  h += '<button class="btn-big" data-act="exam-start" data-p="' + next + '"><span class="jp">模擬試験</span>' +
+       'Full N5 exam — ' + (qTotal + n) + ' questions · listening paper ' + next + '</button>';
+  h += '<h2>Listening tests only</h2><p class="muted tiny">One full 30-minute 聴解 paper on its own. ' +
+       'Every paper has different questions.</p><div class="lpapers">';
+  for (i = 1; i <= L.papers; i++){
+    h += '<button class="btn" data-act="exam-listen" data-p="' + i + '"><b>' + i + '</b><small>' +
+         (done[i] ? done[i].pts + '/60' : 'new') + '</small></button>';
+  }
+  h += '</div><p class="tiny" style="margin-top:12px">Full exam with a chosen listening paper:</p><div class="lpapers">';
+  for (i = 1; i <= L.papers; i++) h += '<button class="btn btn-sm btn-ghost" data-act="exam-start" data-p="' + i + '">' + i + '</button>';
+  h += '</div><button class="btn btn-ghost" style="width:100%;margin-top:12px" data-act="exam-start" data-p="0">' +
+       'Language knowledge and reading only</button>';
+  return h;
+}
+
+function listenPaperSelfTest(add){
+  var L = EXAM_SPEC.listening, bad = [], used = {}, rep = 0, p, i;
+  for (p = 1; p <= L.papers; p++){
+    var sec = listenSection(p), per = {};
+    for (i = 0; i < sec.questions.length; i++){
+      var q = sec.questions[i], need = (q.partSpec.key === 'task' || q.partSpec.key === 'point') ? 4 : 3;
+      per[q.partSpec.key] = (per[q.partSpec.key] || 0) + 1;
+      if (q.opts.length !== need || q.ans < 0 || q.ans >= need) bad.push('paper ' + p + ' ' + q.item.id);
+      if (used[q.item.id]) rep++;
+      used[q.item.id] = 1;
+    }
+    for (i = 0; i < L.parts.length; i++){
+      if (per[L.parts[i].key] !== L.parts[i].n) bad.push('paper ' + p + ' ' + L.parts[i].jp + ' has ' + (per[L.parts[i].key] || 0));
+    }
+  }
+  add('5 listening papers follow the N5 split (7/6/5/6) and share no questions', bad.length === 0 && rep === 0,
+      bad.join(' · ') || Object.keys(used).length + ' different items · ' + rep + ' repeats');
+
+  var save = exam;
+  exam = { sections: [listenSection(1)] };
+  for (i = 0; i < exam.sections[0].questions.length; i++) exam.sections[0].answers[i] = exam.sections[0].questions[i].ans;
+  var r1 = examScore(null);
+  exam = save;
+  add('Scoring: a perfect listening-only paper gives 60/60 and leaves the total open',
+      r1.sections[1].points === 60 && r1.sections[0].points === null && r1.total === null,
+      'listening ' + r1.sections[1].points + ' · needs ' + r1.needed + ' more to reach ' + EXAM_SPEC.pass.total);
+}
+
+/* =========================================================================
+   BACKUP & RESTORE. Progress lives only in this browser's storage; a backup
+   is the whole state as one JSON file. Works on a phone and a computer, from
+   the downloaded HTML file or the installed app. Three ways out (file,
+   share sheet, copyable code) and two ways in (file picker, pasted code),
+   because phones differ in what they allow.
+   ========================================================================= */
+function backupName(){ return 'nihongo-n5-backup-' + dayKey() + '.json'; }
+function backupText(){
+  var n = 0;
+  for (var id in state.cards) if (ITEM_BY_ID[id]) n++;
+  return JSON.stringify({ app: 'nihongo-n5', format: 1, saved: new Date().toISOString(), items: n, state: state });
+}
+function markBackedUp(){ state.lastBackup = dayKey(); saveState(); }
+
+function backupDownload(){
+  markBackedUp();
+  try {
+    var blob = new Blob([backupText()], { type: 'application/json' });
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = backupName(); a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ try { URL.revokeObjectURL(url); document.body.removeChild(a); } catch (e){} }, 30000);
+    toast('Backup saved: ' + backupName());
+  } catch (e){
+    toast('This browser cannot save files here. Use “backup code” instead.');
+  }
+  render('settings');
+}
+
+function backupShare(){
+  try {
+    var file = new File([backupText()], backupName(), { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      markBackedUp();
+      navigator.share({ files: [file], title: 'Nihongo N5 backup' }).catch(function(){});
+      return;
+    }
+  } catch (e){}
+  backupDownload();
+}
+
+/* Returns true if the progress was replaced. */
+function restoreFrom(text){
+  var obj;
+  try { obj = JSON.parse(text); } catch (e){ toast('That is not a valid backup.'); return false; }
+  var s = (obj && obj.app === 'nihongo-n5' && obj.state) ? obj.state : obj;
+  if (!s || typeof s !== 'object' || !s.cards || typeof s.cards !== 'object' || !s.settings){
+    toast('That is not a Nihongo N5 backup.');
+    return false;
+  }
+  var incoming = 0, here = 0, id;
+  for (id in s.cards) if (ITEM_BY_ID[id]) incoming++;
+  for (id in state.cards) if (ITEM_BY_ID[id]) here++;
+  if (!window.confirm('Restore this backup' + (obj.saved ? ' from ' + String(obj.saved).slice(0, 10) : '') + '?\n\n' +
+      'Backup: ' + incoming + ' studied items.\nThis device now: ' + here + ' studied items.\n\n' +
+      'The progress on this device will be replaced.')) return false;
+  var d = defaultState(), k;
+  for (k in d) if (!(k in s)) s[k] = d[k];
+  for (k in d.settings) if (!(k in s.settings)) s.settings[k] = d.settings[k];
+  state = s;
+  session = null; exam = null; gm = null;
+  rollDay();
+  saveState();
+  applyTheme();
+  render('home');
+  toast(storageOK ? 'Progress restored: ' + incoming + ' items.' : 'Restored, but this browser is not saving progress.');
+  return true;
+}
+
+function importFromFile(input){
+  var f = input.files && input.files[0];
+  if (!f) return;
+  try {
+    var rd = new FileReader();
+    rd.onload = function(){ restoreFrom(String(rd.result)); input.value = ''; };
+    rd.onerror = function(){ toast('Could not read that file.'); input.value = ''; };
+    rd.readAsText(f);
+  } catch (e){ toast('Could not read that file.'); }
+}
+
+function backupCardHTML(){
+  var last = state.lastBackup, ago = last ? daysBetween(last, dayKey()) : -1, n = 0, id;
+  for (id in state.cards) if (ITEM_BY_ID[id]) n++;
+  var canShare = !!(window.navigator && navigator.canShare && window.File);
+  var h = '<h2>Back up your progress</h2><div class="card">';
+  h += '<p class="muted">Progress lives only in this browser. Clearing browser data, changing phone or reinstalling ' +
+       'the app erases it. Save a backup now and then — it is also how you move progress between computer and phone.</p>';
+  h += '<p class="tiny">' + (last ? 'Last backup: ' + (ago === 0 ? 'today' : ago + ' day' + (ago === 1 ? '' : 's') + ' ago') :
+       'No backup yet.') + ' · ' + n + ' items studied on this device.</p>';
+  h += '<button class="btn btn-primary" style="width:100%;margin-bottom:8px" data-act="bk-save">⬇ Save backup file</button>';
+  if (canShare) h += '<button class="btn btn-ghost" style="width:100%;margin-bottom:8px" data-act="bk-share">' +
+                     'Send backup (WhatsApp, email, Drive…)</button>';
+  h += '<label class="btn btn-ghost bk-label">⬆ Restore from a backup file<input type="file" id="importFile" hidden></label>';
+  h += '<details class="bk-more"><summary class="tiny">No file option? Use a backup code instead</summary>' +
+       '<button class="btn btn-sm btn-ghost" data-act="bk-code">Show my backup code</button>' +
+       '<textarea id="bkText" class="bk-text" placeholder="Paste a backup code here to restore it"></textarea>' +
+       '<div class="row"><button class="btn btn-sm btn-ghost" data-act="bk-copy" style="flex:1">Copy</button>' +
+       '<button class="btn btn-sm btn-primary" data-act="bk-paste" style="flex:1">Restore this code</button></div></details>';
+  h += '<p class="tiny">Moving to your phone: save the file here, send it to the phone, open the app there and tap ' +
+       '“Restore from a backup file”.</p></div>';
+  return h;
+}
+
+function onBackupAction(act){
+  if (act === 'bk-save'){ backupDownload(); return true; }
+  if (act === 'bk-share'){ backupShare(); return true; }
+  var ta = $('#bkText');
+  if (act === 'bk-code'){
+    if (ta){ ta.value = backupText(); ta.focus(); ta.select(); }
+    markBackedUp();
+    toast('Copy this code and keep it somewhere safe.');
+    return true;
+  }
+  if (act === 'bk-copy'){
+    if (!ta || !ta.value){ toast('Show your backup code first.'); return true; }
+    ta.select();
+    var done = function(){ toast('Copied.'); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, function(){
+        try { document.execCommand('copy'); done(); } catch (e){ toast('Select the text and copy it by hand.'); }
+      });
+      else { document.execCommand('copy'); done(); }
+    } catch (e){ toast('Select the text and copy it by hand.'); }
+    return true;
+  }
+  if (act === 'bk-paste'){
+    if (ta && ta.value.trim()) restoreFrom(ta.value.trim());
+    else toast('Paste a backup code into the box first.');
+    return true;
+  }
+  return false;
+}
+
+/* =========================================================================
+   HOW TO USE — one screen, opened from Home. Counts and daily limits are
+   read from the app itself, so the guide cannot go out of date.
+   ========================================================================= */
+function screenGuide(){
+  var st = state.settings, n = ITEMS.length;
+  var per = (st.limits && st.newPerDay > 0) ? st.newPerDay : 10;
+  var days = Math.ceil(n / per), days20 = Math.ceil(n / 20);
+  var tabs = [
+    ['Home', 'today’s study, your streak, shortcuts to everything'],
+    ['Learn', 'kana charts, reading rules, kanji, vocabulary, grammar, conjugation, conversations'],
+    ['Review', 'what is due now and this week; review-only and look-alike drills'],
+    ['Listen', '聴解 practice with audio: the 4 exam question types plus a numbers/times drill'],
+    ['Games', 'sentence builder, particles, counters, kanji pairs, 60-second speed round'],
+    ['Exam', 'the full N5 mock exam out of 180, or one of 5 listening papers'],
+    ['Progress', 'readiness %, kana and kanji heatmaps, accuracy, your look-alike mistakes'],
+    ['⚙', 'backup, daily limits, romaji and furigana, sound, voice, theme']
+  ];
+  var h = '<h1>How to use this app</h1>';
+  h += '<p class="muted">The short version: open the app every day and press <b class="jp">今日の学習</b>. ' +
+       'Everything else is extra practice.</p>';
+
+  h += '<div class="card"><h3 class="g-h">1 · Where to start</h3>' +
+       '<p>Press <b class="jp">今日の学習</b> on Home. Your first few days are hiragana only, because nothing else ' +
+       'can be read without it. Before the first session, spend five minutes on <b>Learn → Hiragana</b> and ' +
+       '<b>Learn → Reading rules</b>.</p>' +
+       '<p class="tiny">Once you have met the 46 basic hiragana, new cards arrive mixed: in every 10, roughly ' +
+       '3 kana, 4 words, 2 kanji and 1 grammar point.</p></div>';
+
+  h += '<div class="card"><h3 class="g-h">2 · Every day, 15–30 minutes</h3>' +
+       '<p><b>① 今日の学習</b> — today’s reviews plus ' + per + ' new items. Always do this first; it is the one ' +
+       'step that really matters.</p>' +
+       '<p><b>② If you have time</b> — a set on the <b>Listen</b> tab, a scene in <b>Conversations</b>, or a ' +
+       'round of <b>Games</b>.</p>' +
+       '<p class="tiny">Answer honestly: a wrong answer is useful, it just brings the card back sooner. No sound? ' +
+       'Audio needs a Japanese voice on your device; the Listen tab shows how to add one. On a computer, keys 1–4 ' +
+       'answer, Space continues and Esc leaves.</p></div>';
+
+  h += '<div class="card"><h3 class="g-h">3 · How reviews work</h3>' +
+       '<p>A new card comes back twice more in the same session. After that, each right answer pushes it further ' +
+       'away: tomorrow, then about 3 days, a week, three weeks… A wrong answer brings it back within the session ' +
+       'and restarts it from one day.</p>' +
+       '<p class="tiny">Try not to skip days — reviews wait for you and pile up. ' +
+       (st.limits ? 'Daily limits (' + st.newPerDay + ' new, ' + st.revPerDay + ' reviews) keep each day finishable. '
+                  : 'Daily limits are switched off in Settings. ') +
+       'If the new cards feel easy, raise “New items per day” in ⚙ Settings.</p></div>';
+
+  h += '<div class="card"><h3 class="g-h">4 · A realistic plan</h3>' +
+       '<p>The app holds ' + n + ' items. At ' + per + ' new a day you meet all of them in about ' + days + ' days' +
+       (per < 20 ? '; at 20 a day, in about ' + days20 + '.' : '.') + '</p>' +
+       '<div class="lesson">' +
+       '<p><b>First month</b> — kana, then your first words and kanji. Romaji hints switch themselves off once ' +
+       'your kana accuracy passes 90%; let them.</p>' +
+       '<p><b>From month two</b> — a few minutes a week in <b>Learn → Conjugation</b>. Verb forms are the ' +
+       'hardest N5 skill.</p>' +
+       '<p><b>Every week or two</b> — one listening paper or a mock exam on the <b>Exam</b> tab. Every question ' +
+       'you miss goes straight back into your reviews.</p>' +
+       '<p><b>Final weeks</b> — sit the full exam with a listening paper you have not done yet. The pass mark is ' +
+       EXAM_SPEC.pass.total + '/' + EXAM_SPEC.pass.totalMax + ' with at least ' + EXAM_SPEC.pass.sectionMin +
+       ' in each section.</p></div></div>';
+
+  h += '<div class="card"><h3 class="g-h">5 · Checking your progress</h3>' +
+       '<p>The <b>Progress</b> tab shows your streak, accuracy and colour grids for kana and kanji: pale means ' +
+       'just started, darkest means mastered (next review two weeks or more away).</p>' +
+       '<p><b>N5 readiness %</b> is weighted kana 20 · kanji 25 · vocabulary 35 · grammar 20, and measures how ' +
+       'well you know each item, not just whether you have seen it. It rises slowly on purpose. For a real ' +
+       'pass/fail check, use the mock exam.</p>' +
+       '<p class="tiny">Your streak counts every day you study: answering cards or listening questions, or ' +
+       'finishing a game, a conversation quiz or an exam.</p></div>';
+
+  h += '<div class="card" style="border-color:var(--accent)"><h3 class="g-h">6 · Back up once a week</h3>' +
+       '<p>Your progress lives only in this browser. <b>⚙ Settings → Save backup file</b> keeps it safe, and is ' +
+       'also how you move it to another phone or computer.</p>' +
+       '<button class="btn btn-sm btn-primary" data-nav="settings">Go to backup</button></div>';
+
+  h += '<div class="card"><h3 class="g-h">What each tab does</h3>';
+  for (var i = 0; i < tabs.length; i++){
+    h += '<div class="g-row"><b>' + tabs[i][0] + '</b><span class="muted tiny">' + tabs[i][1] + '</span></div>';
+  }
+  h += '</div>';
+  h += '<button class="btn-big" data-act="study-today"><span class="jp">今日の学習</span>Start today’s study</button>';
+  return h;
+}
+
+NM.backup = backupText;
+NM.restore = restoreFrom;
 
 NM.listen = { build: lsBuild, num: lsNum, time: lsTime, day: function(d){ return LS_DAY[d]; },
               month: function(m){ return LS_MON[m]; } };
