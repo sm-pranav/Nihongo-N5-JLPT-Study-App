@@ -39,10 +39,12 @@
    READING_RULES .................. "READING_RULES" six one-screen lessons
    SEED_CONFUSIONS ................ "SEED_CONFUSIONS"  look-alike kana pairs
    KANJI .......................... "KANJI —"      99 entries  (checkpoint B)
-   VOCAB .......................... "VOCAB —"      729 entries (checkpoint C)
+   VOCAB .......................... "VOCAB —"      735 entries (checkpoint C)
    GRAMMAR ........................ "GRAMMAR —"    96 points   (checkpoint D)
    EXAM_SPEC ...................... "EXAM_SPEC"    counts, times, pass rules
    PARAPHRASE / CLOZE / READING ... exam material  (checkpoint E)
+   LISTENING / LS_TYPES ........... 聴解 practice  (addition 1) — screenListen(),
+                                    speakSeq(), lsNumQuestion(), listeningSelfTest()
    ITEMS registry ................. buildItems()   item id -> item object
    SRS engine ..................... newCard(), reviewInterval(), grade(),
                                     dueCards(), newItems(), countsToday()
@@ -357,6 +359,22 @@ td.ve .vp{display:block;font-size:11px;color:var(--ink-faint)}
 u.target{text-decoration:none;border-bottom:3px solid var(--accent);padding-bottom:2px}
 .choice.picked{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
 
+/* ===== CHOICE SIZING — long options get a readable size ================== */
+.choices.mid .choice.jp{font-size:24px}
+.choices.stack{grid-template-columns:1fr}
+.choices.stack .choice{font-size:18px;min-height:54px;justify-content:flex-start;
+  text-align:left;padding:10px 14px 10px 30px}
+.choices.stack .choice.jp{font-size:19px}
+
+/* ===== LISTENING (addition 1) ============================================= */
+.ls-play{width:100%;min-height:64px;font-size:18px}
+.ls-tr .ln{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid var(--line)}
+.ls-tr .ln:last-child{border-bottom:none}
+.ls-tr .sp{flex:0 0 26px;color:var(--ink-faint);font-size:13px;padding-top:3px}
+.ls-tr .jp{font-size:17px;line-height:1.55}
+.choice.big-num{font-size:30px;font-weight:600}
+.choice .reveal{display:block;font-family:var(--jp);font-size:16px;font-weight:400;margin-top:2px}
+
 /* @@CSS@@ — add new component styles above this marker, colours as var(--…) */
 
 /* ===== MISC =============================================================== */
@@ -398,6 +416,7 @@ u.target{text-decoration:none;border-bottom:3px solid var(--accent);padding-bott
       <button data-nav="home">Home</button>
       <button data-nav="learn">Learn</button>
       <button data-nav="review">Review</button>
+      <button data-nav="listen">Listen</button>
       <button data-nav="exam">Exam</button>
       <button data-nav="progress">Progress</button>
       <button data-nav="settings">⚙</button>
@@ -422,7 +441,8 @@ var DATA_GAPS = [
   "Each kanji gets only its standard N5 readings. Rare, literary and name-only readings (一 イツ, 日 ひ as ~び in compounds beyond the listed words, 中 なか as ジュウ) are left out on purpose.",
   "安 is the one kanji with a single compound: every other common 安-word (安心, 安全, 安売り) needs a kanji outside this set, and a compound containing an unknown kanji is worse than one fewer example.",
   "Compounds are restricted to kanji that are themselves in the app, which is why 漢字 is absent (漢 is not an N5 kanji) and words like 会社員 or 食べ物 appear as かいしゃいん and 食べもの.",
-  "Vocabulary: 717 entries shipped against a target of about 800. The last hundred were dropped rather than invented — see BUILD-PROMPT.md section 1 rule 2.",
+  "Vocabulary: 735 entries shipped against a target of about 800. The rest were dropped rather than invented — see BUILD-PROMPT.md section 1 rule 2.",
+  "Listening practice (addition 1) uses the device's own speech synthesis. It is clear but more robotic than the real exam recording, and it needs a Japanese voice installed. 問題3 shows the situation in English instead of the exam's picture. 35 hand-written conversations plus an unlimited numbers/times/dates/prices drill. The mock exam itself still has no listening section.",
   "Because most words are written in kana, homophones would collide. Where two N5 words share a reading, they are either merged into one entry with both meanings (あつい hot weather / hot to the touch · はやい early / fast · かぜ wind / a cold · とる to take / to photograph · ひく to pull / to play an instrument) or the more frequent one is kept alone: きる = to wear (切る to cut is left out), いる = to exist (要る to need is left out), かえる = to go home (変える to change is left out), はし = chopsticks (橋 bridge is left out), は = the topic particle (歯 tooth is left out), はな = flower (鼻 nose is left out).",
   "Verbs and adjectives whose kanji is outside the app's 99-kanji set are written in kana (はしる, つかう, いそがしい). This is also how beginner textbooks print them, and it keeps every kanji on screen one you are studying.",
   "Grammar: 96 points. A few things that appear on some N5 lists are left out because they belong to N4 in every source we trust: ～でしょう, ～と思います, ～たことがあります, the potential form and the volitional plain form.",
@@ -1770,6 +1790,14 @@ var VOCAB = [
 {w:'テレビばんぐみ',r:'テレビばんぐみ',en:'television programme',pos:'n',th:'fun'},
 {w:'まんが',r:'まんが',en:'comic, manga',pos:'n',th:'fun'},
 
+/* --- added with the listening practice: core N5 words its scripts need --- */
+{w:'どう',r:'どう',en:'how, how about',pos:'qword',th:'qword'},
+{w:'いかが',r:'いかが',en:'how about (polite)',pos:'qword',th:'qword'},
+{w:'ええ',r:'ええ',en:'yes (softer than はい)',pos:'inter',th:'greet'},
+{w:'かかる',r:'かかる',en:'to take (time), to cost (money)',pos:'v5',th:'verb'},
+{w:'つぎ',r:'つぎ',en:'next',pos:'n',th:'time'},
+{w:'～ごろ',r:'～ごろ',en:'about (a point in time)',pos:'suf',th:'time'},
+
 /* @@VOCAB@@ — add more vocabulary entries above this marker */
 ];
 
@@ -2633,6 +2661,148 @@ var READING = [
         opts:['五さつ','三さつ','二さつ','一さつ'],a:0}]}
 ];
 
+/* =========================================================================
+   LISTENING — addition 1: 聴解 practice, the four real N5 listening types.
+   Spoken with the device's Japanese voice. Every line is also shown as a
+   transcript after you answer, so it is checked by NM.selfTest() exactly like
+   every other Japanese sentence in the app.
+     task/point  setup = narrator's scene line · q = the question (spoken twice)
+                 lines = [speaker, text] with M = man, F = woman
+                 opts = 4 printed answers · a = index of the right one
+     utter       sit = situation (spoken) · sitEn = the same, shown in English
+                 opts = 3 spoken phrases, NOT printed until you answer
+     resp        say = one spoken line · opts = 3 spoken replies, not printed
+     en          what happened / why the answer is right
+   Options are shuffled every time, so a = index in the data, not on screen.
+   ========================================================================= */
+var LISTENING = [
+/* --- 問題1 課題理解: what will they do? ---------------------------------- */
+{id:'t1',type:'task',setup:'女の人と 男の人が 話しています。',q:'男の人は 何を 買いますか。',
+ lines:[['F','あした パーティーが ありますね。何を 買いましょうか。'],['M','ジュースと ビールを 買いましょう。'],
+        ['F','ビールは うちに たくさん ありますよ。'],['M','そうですか。じゃあ、ジュースと ケーキを 買います。']],
+ opts:['ジュースと ビール','ジュースと ケーキ','ビールと ケーキ','ケーキだけ'],a:1,
+ en:'He first says juice and beer, but there is plenty of beer at home, so he buys juice and cake.'},
+{id:'t2',type:'task',setup:'先生が 学生に 話しています。',q:'学生は あした 何を もって 来ますか。',
+ lines:[['M','あしたは テストが あります。えんぴつと けしゴムを もって 来てください。'],
+        ['M','ボールペンは つかわないでください。じしょも もって 来ないでください。']],
+ opts:['えんぴつと けしゴム','ボールペンと けしゴム','えんぴつと じしょ','ボールペンと じしょ'],a:0,
+ en:'Bring a pencil and an eraser. No ballpoint pens, and no dictionary.'},
+{id:'t3',type:'task',setup:'男の人と 女の人が 話しています。',q:'女の人は これから どこへ 行きますか。',
+ lines:[['F','すみません、この ちかくに ほんやは ありますか。'],
+        ['M','ほんやは 駅の 前に ありますが、今日は 休みです。としょかんは あいていますよ。'],
+        ['F','そうですか。じゃあ、としょかんへ 行きます。']],
+ opts:['ほんや','としょかん','駅','ぎんこう'],a:1,
+ en:'The bookshop is closed today, so she goes to the library, which is open.'},
+{id:'t4',type:'task',setup:'会社で 女の人と 男の人が 話しています。',q:'男の人は 先に 何を しますか。',
+ lines:[['F','田中さん、この てがみを 出してください。'],['M','はい、わかりました。'],
+        ['F','でも、出す 前に、てがみに 名前を 書いてください。'],['M','はい。']],
+ opts:['てがみを 出します','てがみに 名前を 書きます','きってを 買います','電話を かけます'],a:1,
+ en:'He must write his name on the letter BEFORE posting it (出す 前に).'},
+{id:'t5',type:'task',setup:'レストランで 男の人と 女の人が 話しています。',q:'女の人は 何を 食べますか。',
+ lines:[['M','何を 食べますか。'],['F','わたしは カレーが 好きですが、今日は あついですから、サラダと パンに します。'],
+        ['M','じゃあ、わたしは カレーに します。']],
+ opts:['カレー','サラダと パン','カレーと パン','サラダと カレー'],a:1,
+ en:'She likes curry, but it is hot today, so she chooses salad and bread. The man has the curry.'},
+{id:'t6',type:'task',setup:'駅で 女の人と 男の人が 話しています。',q:'女の人は 何ばんの バスに のりますか。',
+ lines:[['F','すみません。大学へ 行きたいです。何ばんの バスに のりますか。'],
+        ['M','大学ですか。3ばんの バスです。7ばんの バスは 駅までです。'],['F','わかりました。ありがとうございます。']],
+ opts:['3ばん','7ばん','1ばん','4ばん'],a:0,
+ en:'Bus number 3 goes to the university. Number 7 only goes as far as the station.'},
+{id:'t7',type:'task',setup:'男の人と 女の人が 話しています。',q:'女の人は こんばん 何を しますか。',
+ lines:[['M','こんばん いっしょに えいがを 見ませんか。'],['F','すみません。こんばんは しゅくだいが たくさん ありますから…。'],
+        ['M','そうですか。じゃあ、しゅうまつは どうですか。'],['F','しゅうまつは ひまです。行きましょう。']],
+ opts:['えいがを 見ます','しゅくだいを します','買いものに 行きます','うちで 休みます'],a:1,
+ en:'Tonight she has a lot of homework. The film is at the weekend instead.'},
+/* --- 問題2 ポイント理解: catch the key point ------------------------------ */
+{id:'p1',type:'point',setup:'会社で 男の人と 女の人が 話しています。',q:'男の人は どうして おそく なりましたか。',
+ lines:[['F','おそかったですね。どう しましたか。'],['M','すみません。電車が 来ませんでした。雨が たくさん ふりましたから。'],
+        ['F','そうですか。たいへんでしたね。']],
+ opts:['あさ おそく おきましたから','電車が 来ませんでしたから','雨の 中を あるきましたから','バスに のりませんでしたから'],a:1,
+ en:'The train did not come because of heavy rain.'},
+{id:'p2',type:'point',setup:'店で 女の人と 店の人が 話しています。',q:'女の人が 買う ものは ぜんぶで いくらですか。',
+ lines:[['F','すみません。この りんごは いくらですか。'],['M','一つ 100円です。'],
+        ['F','じゃあ、三つ ください。それから、この パンも ください。'],['M','パンは 200円です。']],
+ opts:['300円','400円','500円','600円'],a:2,
+ en:'Three apples at 100 yen = 300 yen, plus bread at 200 yen = 500 yen.'},
+{id:'p3',type:'point',setup:'学校で 男の学生と 女の学生が 話しています。',q:'テストは いつですか。',
+ lines:[['M','テストは 来週の 月曜日ですか。'],['F','いいえ、月曜日は 休みですから、火曜日ですよ。'],['M','そうですか。わかりました。']],
+ opts:['来週の 月曜日','来週の 火曜日','今週の 火曜日','今週の 月曜日'],a:1,
+ en:'Monday is a holiday, so the test is next Tuesday.'},
+{id:'p4',type:'point',setup:'男の人と 女の人が 話しています。',q:'女の人は 天気が いい 日は どうやって 会社へ 行きますか。',
+ lines:[['M','毎日 電車で 会社へ 行きますか。'],['F','いいえ。前は 電車でしたが、今は じてんしゃです。'],
+        ['M','雨の 日も じてんしゃですか。'],['F','いいえ、雨の 日は バスです。']],
+ opts:['電車','じてんしゃ','バス','車'],a:1,
+ en:'She used to take the train; now she cycles. Only on rainy days does she take the bus.'},
+{id:'p5',type:'point',setup:'女の人と 男の人が 話しています。',q:'男の人は きょうだいが 何人 いますか。',
+ lines:[['F','田中さんは きょうだいが いますか。'],['M','はい。あにが 一人と いもうとが 二人 います。'],
+        ['F','そうですか。わたしは きょうだいが いません。']],
+ opts:['一人','二人','三人','四人'],a:2,
+ en:'One older brother plus two younger sisters = three.'},
+{id:'p6',type:'point',setup:'男の人と 女の人が 電話で 話しています。',q:'二人は 何時に 会いますか。',
+ lines:[['M','あした、駅の 前で 10時に 会いませんか。'],['F','10時は ちょっと…。11時は どうですか。'],
+        ['M','いいですよ。じゃあ、11時に 会いましょう。']],
+ opts:['10時','10時半','11時','11時半'],a:2,
+ en:'10 o’clock does not suit her (ちょっと… is a polite no), so they meet at 11.'},
+{id:'p7',type:'point',setup:'男の人と 女の人が 話しています。',q:'女の人は 日曜日に 何を しましたか。',
+ lines:[['M','しゅうまつは 何を しましたか。'],['F','土曜日は 友だちと テニスを しました。日曜日は うちで そうじと せんたくを しました。'],
+        ['M','いそがしかったですね。']],
+ opts:['テニスを しました','そうじと せんたくを しました','友だちと 買いものを しました','えいがを 見ました'],a:1,
+ en:'Tennis was on Saturday. On Sunday she cleaned and did the washing.'},
+{id:'p8',type:'point',setup:'女の人と 男の人が 話しています。',q:'かぎは どこに ありましたか。',
+ lines:[['F','かぎが ありません。'],['M','つくえの 上に ありませんか。'],['F','つくえの 上には ありません。'],
+        ['M','つくえの 下は どうですか。'],['F','下にも ありません。…テレビの 前に ありました。']],
+ opts:['つくえの 上','つくえの 下','テレビの 前','テレビの 後ろ'],a:2,
+ en:'Not on the desk, not under it — she finds the key in front of the television.'},
+/* --- 問題3 発話表現: what do you say? ------------------------------------- */
+{id:'u1',type:'utter',sit:'友だちの ペンを つかいたいです。何と いいますか。',sitEn:'You want to use your friend’s pen.',
+ opts:['ペンを かしてください。','ペンを かりてください。','ペンを かえしてください。'],a:0,
+ en:'かしてください = please lend (it to me). かりる is what YOU do; かえす is give back.'},
+{id:'u2',type:'utter',sit:'あさ、先生に 会いました。何と いいますか。',sitEn:'You meet your teacher in the morning.',
+ opts:['おはようございます。','おやすみなさい。','こんばんは。'],a:0,en:'Morning greeting: おはようございます.'},
+{id:'u3',type:'utter',sit:'ごはんを 食べる 前です。何と いいますか。',sitEn:'You are about to start eating.',
+ opts:['ごちそうさまでした。','いただきます。','いってきます。'],a:1,en:'いただきます before a meal; ごちそうさまでした after it.'},
+{id:'u4',type:'utter',sit:'レストランで 水が ほしいです。何と いいますか。',sitEn:'In a restaurant, you want some water.',
+ opts:['水を おねがいします。','水は いかがですか。','水を どうぞ。'],a:0,
+ en:'～を おねがいします asks for something. いかがですか and どうぞ are what the waiter says.'},
+{id:'u5',type:'utter',sit:'うちを 出ます。何と いいますか。',sitEn:'You are leaving home in the morning.',
+ opts:['いってきます。','ただいま。','おかえりなさい。'],a:0,en:'いってきます when leaving; ただいま when you come back.'},
+{id:'u6',type:'utter',sit:'友だちが かえります。何と いいますか。',sitEn:'Your friend is going home for the day.',
+ opts:['またあした。','はじめまして。','おかえりなさい。'],a:0,en:'またあした = see you tomorrow.'},
+{id:'u7',type:'utter',sit:'へやが あついです。まどを あけたいです。何と いいますか。',sitEn:'The room is hot and you want to open the window.',
+ opts:['まどを あけても いいですか。','まどを あけましたか。','まどを しめてください。'],a:0,
+ en:'～ても いいですか asks permission.'},
+{id:'u8',type:'utter',sit:'先生の 話が わかりませんでした。何と いいますか。',sitEn:'You did not understand what the teacher said.',
+ opts:['もう いちど おねがいします。','どうも ありがとうございます。','よろしくおねがいします。'],a:0,
+ en:'もう いちど おねがいします = once more, please.'},
+/* --- 問題4 即時応答: quick response --------------------------------------- */
+{id:'r1',type:'resp',say:'お名前は 何ですか。',opts:['田中です。','20さいです。','日本から 来ました。'],a:0,en:'Asked your name, you give your name.'},
+{id:'r2',type:'resp',say:'この かばんは だれのですか。',opts:['わたしのです。','あそこです。','とても 高いです。'],a:0,en:'だれの = whose. わたしの = mine.'},
+{id:'r3',type:'resp',say:'いっしょに ひるごはんを 食べませんか。',opts:['ええ、いいですね。','はい、食べました。','ひるごはんでした。'],a:0,
+ en:'～ませんか is an invitation. Accept it with ええ、いいですね.'},
+{id:'r4',type:'resp',say:'しゅくだいは もう しましたか。',opts:['いいえ、まだです。','はい、まだです。','いいえ、もうです。'],a:0,
+ en:'Not yet = いいえ、まだです.'},
+{id:'r5',type:'resp',say:'今日は 何曜日ですか。',opts:['水曜日です。','3日です。','3時です。'],a:0,en:'何曜日 asks the day of the week.'},
+{id:'r6',type:'resp',say:'おげんきですか。',opts:['はい、げんきです。','はい、どうぞ。','はい、そうですか。'],a:0,en:'How are you? — I am well.'},
+{id:'r7',type:'resp',say:'これ、どうぞ。',opts:['ありがとうございます。','はい、どうぞ。','ごめんなさい。'],a:0,en:'Someone offers you something: thank them.'},
+{id:'r8',type:'resp',say:'すみません、トイレは どこですか。',opts:['あそこです。','トイレです。','はい、そうです。'],a:0,en:'どこ asks where: answer with a place.'},
+{id:'r9',type:'resp',say:'コーヒーと こうちゃと どちらが いいですか。',opts:['コーヒーを おねがいします。','はい、いいです。','コーヒーも こうちゃも 飲みました。'],a:0,
+ en:'Asked which of two you want, choose one.'},
+{id:'r10',type:'resp',say:'あした ひまですか。',opts:['はい、ひまです。','はい、ひまでした。','いいえ、ひまじゃありませんでした。'],a:0,
+ en:'The question is about tomorrow, so the answer must be present tense, not past.'},
+{id:'r11',type:'resp',say:'いってきます。',opts:['いってらっしゃい。','おかえりなさい。','いただきます。'],a:0,
+ en:'The reply to いってきます is always いってらっしゃい.'},
+{id:'r12',type:'resp',say:'駅まで 何分ぐらい かかりますか。',opts:['10分ぐらいです。','10時ぐらいです。','10人ぐらいです。'],a:0,
+ en:'何分 asks how many minutes. 時 is a clock time, 人 counts people.'}
+];
+
+var LS_TYPES = [
+  {key:'task', jp:'問題1 課題理解', label:'What will they do?', hint:'Hear a conversation and decide what someone does next.'},
+  {key:'point',jp:'問題2 ポイント理解', label:'Catch the key point', hint:'Listen for one detail: when, why, how many, where.'},
+  {key:'utter',jp:'問題3 発話表現', label:'What do you say?', hint:'Read the situation, hear three phrases, pick the right one.'},
+  {key:'resp', jp:'問題4 即時応答', label:'Quick response', hint:'Hear one line, pick the best reply. Nothing is printed.'},
+  {key:'num',  jp:'数字・時間・日付', label:'Numbers, times, dates, prices', hint:'Unlimited. The thing N5 listening tests most often.'}
+];
+
 /* @@DATA@@ — new content arrays go above this marker, before the engine runs */
 
 /* =========================================================================
@@ -3192,6 +3362,7 @@ function render(name, opts){
   else if (screenName === 'settings') html = screenSettings();
   else if (screenName === 'session') html = screenSession();
   else if (screenName === 'exam' && typeof screenExam === 'function') html = screenExam();
+  else if (screenName === 'listen' && typeof screenListen === 'function') html = screenListen();
   main.innerHTML = html;
   $$('#nav button').forEach(function(b){
     b.setAttribute('aria-current', b.getAttribute('data-nav') === screenName ? 'true' : 'false');
@@ -3233,6 +3404,7 @@ function screenHome(){
        '<button class="btn btn-ghost" data-nav="learn" style="flex:1">Charts &amp; lessons</button>' +
        '</div>';
   h += '<div class="row" style="margin-top:10px">' +
+       '<button class="btn btn-ghost" data-nav="listen" style="flex:1">🎧 Listening (聴解)</button>' +
        '<button class="btn btn-ghost" data-nav="exam" style="flex:1">Sit a mock N5 exam</button>' +
        '</div>';
   var fromExam = taggedCount('from-mock-exam');
@@ -3334,7 +3506,7 @@ function questionHTML(q){
          'autocapitalize="off" spellcheck="false" placeholder="type the reading">';
     h += '<div class="kbdhint">It checks as you type. Esc = leave the session.</div>';
   } else {
-    h += '<div class="choices" id="choices">';
+    h += '<div class="choices' + (typeof choiceSize === 'function' ? choiceSize(q.options) : '') + '" id="choices">';
     for (var i = 0; i < q.options.length; i++){
       var o = q.options[i];
       h += '<button class="choice' + (o.jp ? ' jp' : '') + '" data-opt="' + i + '">' +
@@ -3846,7 +4018,7 @@ document.addEventListener('click', function(ev){
   if (!t) return;
 
   var nav = t.getAttribute('data-nav');
-  if (nav){ session = null; render(nav); return; }
+  if (nav){ session = null; if (typeof lsStop === 'function') lsStop(); render(nav); return; }
 
   var tab = t.getAttribute('data-tab');
   if (tab){ learnTab = tab; render('learn'); return; }
@@ -4469,6 +4641,7 @@ function onExtraAction(act, el){
   if (typeof onVocabAction === 'function' && onVocabAction(act, el)) return;
   if (typeof onGrammarAction === 'function' && onGrammarAction(act, el)) return;
   if (typeof onExamAction === 'function' && onExamAction(act, el)) return;
+  if (typeof onListenAction === 'function' && onListenAction(act, el)) return;
 }
 
 /* ---------- self test additions ---------- */
@@ -4553,6 +4726,7 @@ function contentSelfTest(add){
   if (typeof vocabSelfTest === 'function') vocabSelfTest(add);
   if (typeof grammarSelfTest === 'function') grammarSelfTest(add);
   if (typeof sentenceSelfTest === 'function') sentenceSelfTest(add);
+  if (typeof listeningSelfTest === 'function') listeningSelfTest(add);
 }
 
 /* =========================================================================
@@ -5027,6 +5201,17 @@ function allSentences(){
           out.push({ src: 'passage opt ' + rd.id, jp: rd.qs[j].opts[k] });
         }
       }
+    }
+  }
+  if (typeof LISTENING !== 'undefined'){
+    for (i = 0; i < LISTENING.length; i++){
+      var L = LISTENING[i], lt = [];
+      if (L.setup) lt.push(L.setup, L.q);
+      if (L.sit) lt.push(L.sit);
+      if (L.say) lt.push(L.say);
+      for (j = 0; j < (L.lines || []).length; j++) lt.push(L.lines[j][1]);
+      lt = lt.concat(L.opts);
+      for (j = 0; j < lt.length; j++) out.push({ src: 'listening ' + L.id, jp: lt[j] });
     }
   }
   if (typeof PARAPHRASE !== 'undefined'){
@@ -5941,7 +6126,7 @@ function examQuestionHTML(){
   if (q.sub) h += '<p class="muted jp" style="margin-top:10px;font-size:17px">' + esc(q.sub) + '</p>';
   h += '</div>';
 
-  h += '<div class="choices" id="examChoices">';
+  h += '<div class="choices' + choiceSize(q.opts) + '" id="examChoices">';
   for (i = 0; i < q.opts.length; i++){
     h += '<button class="choice jp' + (exam.sel === i ? ' picked' : '') +
          '" data-act="exam-pick" data-i="' + i + '"><span class="num">' + (i + 1) + '</span>' +
@@ -6183,6 +6368,433 @@ function examSelfTest(add){
 
   exam = saveExam;
 }
+
+/* =========================================================================
+   ADDITION 1 — LISTENING PRACTICE (聴解)
+   The four real N5 listening question types plus an unlimited numbers drill.
+   Uses the device's Japanese voice; a male-sounding voice is used for the man
+   if the device has one, otherwise the pitch is lowered. Needs a Japanese
+   voice: without one, the screen explains how to install it.
+   ========================================================================= */
+
+/* Long options get a smaller size or a single column, so a phrase never
+   wraps into four lines of 46px text. Used by every multiple-choice screen. */
+function choiceSize(opts){
+  var m = 0;
+  for (var i = 0; i < opts.length; i++){
+    var t = typeof opts[i] === 'string' ? opts[i] : opts[i].text;
+    if (String(t).length > m) m = String(t).length;
+  }
+  return m > 9 ? ' stack' : m > 4 ? ' mid' : '';
+}
+
+/* ---------- speech: a queue of lines, one voice per speaker ---------- */
+var lsToken = 0, lsHeld = null;
+var MALE_VOICE = /ichiro|keita|otoya|hattori|daichi|naoki|takumi|\bmale\b|男性/i;
+
+function lsVoice(s){
+  var male = null, chosen = null, i;
+  for (i = 0; i < jaVoices.length; i++){
+    if (!male && MALE_VOICE.test(jaVoices[i].name)) male = jaVoices[i];
+    if (jaVoices[i].name === state.settings.voice) chosen = jaVoices[i];
+  }
+  if (s === 'M' && male) return { v: male, pitch: 1 };
+  var base = chosen && !MALE_VOICE.test(chosen.name) ? chosen : null;
+  if (!base) for (i = 0; i < jaVoices.length; i++) if (!MALE_VOICE.test(jaVoices[i].name)){ base = jaVoices[i]; break; }
+  base = base || jaVoices[0];
+  return { v: base, pitch: s === 'M' ? 0.72 : s === 'F' ? 1.15 : 1 };
+}
+
+function lsStop(){
+  lsToken++;
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e){}
+}
+
+/* parts = [{s:'N'|'M'|'F', t:'text'}] spoken one after another */
+function speakSeq(parts){
+  if (!window.speechSynthesis || !jaVoices.length || !window.SpeechSynthesisUtterance) return;
+  lsStop();
+  var my = lsToken, i = 0;
+  function next(){
+    if (my !== lsToken || i >= parts.length) return;
+    var p = parts[i++];
+    try {
+      var u = new window.SpeechSynthesisUtterance(p.t);
+      var vp = lsVoice(p.s);
+      u.voice = vp.v;
+      u.lang = (vp.v && vp.v.lang) || 'ja-JP';
+      u.pitch = vp.pitch;
+      u.rate = (state.listen && state.listen.slow) ? 0.7 : 0.92;
+      u.onend = function(){ setTimeout(next, p.s === 'N' ? 700 : 450); };
+      u.onerror = function(){ setTimeout(next, 100); };
+      lsHeld = u;                       /* keeps Chrome from dropping onend */
+      window.speechSynthesis.speak(u);
+    } catch (e){ next(); }
+  }
+  next();
+}
+
+/* ---------- number readings, generated by rule ---------- */
+var LS_D = ['','いち','に','さん','よん','ご','ろく','なな','はち','きゅう'];
+var LS_HOUR = ['','いちじ','にじ','さんじ','よじ','ごじ','ろくじ','しちじ','はちじ','くじ','じゅうじ','じゅういちじ','じゅうにじ'];
+var LS_MON = ['','いちがつ','にがつ','さんがつ','しがつ','ごがつ','ろくがつ','しちがつ','はちがつ','くがつ','じゅうがつ','じゅういちがつ','じゅうにがつ'];
+var LS_DAY = ['','ついたち','ふつか','みっか','よっか','いつか','むいか','なのか','ようか','ここのか','とおか',
+  'じゅういちにち','じゅうににち','じゅうさんにち','じゅうよっか','じゅうごにち','じゅうろくにち','じゅうしちにち',
+  'じゅうはちにち','じゅうくにち','はつか','にじゅういちにち','にじゅうににち','にじゅうさんにち','にじゅうよっか',
+  'にじゅうごにち','にじゅうろくにち','にじゅうしちにち','にじゅうはちにち','にじゅうくにち','さんじゅうにち','さんじゅういちにち'];
+var LS_TEL = ['ゼロ','いち','に','さん','よん','ご','ろく','なな','はち','きゅう'];
+
+function lsNum(n){                              /* 1 … 99999 */
+  var s = '', man = Math.floor(n / 10000), sen = Math.floor(n / 1000) % 10,
+      hyk = Math.floor(n / 100) % 10, ju = Math.floor(n / 10) % 10, one = n % 10;
+  if (man) s += LS_D[man] + 'まん';
+  if (sen) s += ({1:'せん',3:'さんぜん',8:'はっせん'})[sen] || (LS_D[sen] + 'せん');
+  if (hyk) s += ({1:'ひゃく',3:'さんびゃく',6:'ろっぴゃく',8:'はっぴゃく'})[hyk] || (LS_D[hyk] + 'ひゃく');
+  if (ju) s += (ju === 1 ? '' : LS_D[ju]) + 'じゅう';
+  if (one) s += LS_D[one];
+  return s;
+}
+function lsMin(m){                              /* 0, 5, 10 … 55 */
+  if (!m) return '';
+  if (m === 30) return 'はん';
+  var t = Math.floor(m / 10), tens = t ? (t === 1 ? '' : LS_D[t]) + 'じゅう' : '';
+  return m % 10 === 5 ? tens + 'ごふん' : (t === 1 ? '' : LS_D[t]) + 'じゅっぷん';
+}
+function lsTime(h, m){ return LS_HOUR[h] + (m ? ' ' + lsMin(m) : ''); }
+
+var LS_HCONF = {1:[7,11],2:[12,10],3:[6,10],4:[7,8],5:[9,10],6:[3,9],7:[1,4],8:[4,1],9:[5,10],10:[1,2],11:[1,7],12:[2,10]};
+var LS_MINS = [0,5,10,15,20,30,40,45,50];
+var LS_MCONF = {0:[30,10],5:[15,50],10:[0,20],15:[50,5],20:[10,30],30:[0,40],40:[45,30],45:[40,15],50:[15,5]};
+var LS_DCONF = {1:[7,11],2:[20,12],3:[6,13],4:[8,14],5:[9,15],6:[3,16],7:[1,17],8:[4,18],9:[5,19],10:[20,11],
+  14:[4,24],20:[2,10],24:[14,4]};
+var LS_DIGCONF = {1:[7],2:[3],3:[8,6],4:[7],5:[9],6:[8,3],7:[1,4],8:[6,3],9:[5],0:[6]};
+
+function lsFill(right, cands, randomOne){
+  var out = [right], seen = {}, i, guard = 0;
+  seen[right] = 1;
+  shuffle(cands);
+  for (i = 0; i < cands.length && out.length < 4; i++){
+    if (!seen[cands[i]]){ seen[cands[i]] = 1; out.push(cands[i]); }
+  }
+  while (out.length < 4 && guard++ < 60){
+    var c = randomOne();
+    if (!seen[c]){ seen[c] = 1; out.push(c); }
+  }
+  return out;
+}
+
+function lsNumQuestion(){
+  var kind = pick(['time', 'time', 'price', 'price', 'date', 'tel']);
+  var right, say, ask, reading, tip = '', cands = [], rnd, i;
+  if (kind === 'time'){
+    var h = 1 + Math.floor(Math.random() * 12), m = pick(LS_MINS);
+    var fmt = function(hh, mm){ return hh + ':' + pad2(mm); };
+    right = fmt(h, m); reading = lsTime(h, m);
+    say = 'えいがは ' + reading + ' からです。'; ask = 'What time does the film start?';
+    var hc = LS_HCONF[h], mc = LS_MCONF[m];
+    cands = [fmt(hc[0], m), fmt(hc[1], m), fmt(h, mc[0]), fmt(h, mc[1]), fmt(hc[0], mc[0])];
+    rnd = function(){ return fmt(1 + Math.floor(Math.random() * 12), pick(LS_MINS)); };
+    if (h === 4) tip = '4時 is よじ, never よんじ. ';
+    if (h === 7) tip = '7時 is しちじ. ';
+    if (h === 9) tip = '9時 is くじ, never きゅうじ. ';
+    if (m === 30) tip += 'はん = half past. ';
+    else if (m && m % 10 === 0) tip += 'Minutes ending in 0 take ぷん: じゅっぷん, にじゅっぷん. ';
+  } else if (kind === 'price'){
+    var n = Math.random() < 0.5 ? (1 + Math.floor(Math.random() * 9)) * 100 + Math.floor(Math.random() * 10) * 10
+                                : (1 + Math.floor(Math.random() * 9)) * 1000 + Math.floor(Math.random() * 10) * 100;
+    right = n + '円'; reading = lsNum(n) + 'えん';
+    say = 'これは ' + reading + 'です。'; ask = 'How much is it?';
+    var ds = String(n).split('');
+    for (i = 0; i < 2; i++){
+      var alts = LS_DIGCONF[ds[i]] || [];
+      for (var k = 0; k < alts.length; k++){
+        if (i === 0 && alts[k] === 0) continue;
+        var cp = ds.slice(); cp[i] = String(alts[k]); cands.push(cp.join('') + '円');
+      }
+    }
+    cands.push((n >= 1000 ? n / 10 : n * 10) + '円');
+    rnd = function(){ return ((1 + Math.floor(Math.random() * 9)) * (n >= 1000 ? 1000 : 100)) + '円'; };
+    if (/^[368]/.test(String(n)) || /^\d[368]00$/.test(String(n))){
+      tip = 'Sound changes: 300 さんびゃく · 600 ろっぴゃく · 800 はっぴゃく · 3000 さんぜん · 8000 はっせん. ';
+    }
+  } else if (kind === 'date'){
+    var mo = 1 + Math.floor(Math.random() * 12);
+    var dpool = [1,2,3,4,5,6,7,8,9,10,14,20,24, 1 + Math.floor(Math.random() * 28)];
+    var d = pick(dpool);
+    var df = function(mm, dd){ return mm + '月' + dd + '日'; };
+    right = df(mo, d); reading = LS_MON[mo] + ' ' + LS_DAY[d];
+    say = 'わたしの たんじょうびは ' + reading + ' です。'; ask = 'When is the birthday?';
+    var dc = LS_DCONF[d] || [d + 1 > 28 ? d - 1 : d + 1, d > 10 ? d - 10 : d + 10];
+    var mc2 = LS_HCONF[mo];
+    cands = [df(mo, dc[0]), df(mo, dc[1]), df(mc2[0], d), df(mc2[0], dc[0])];
+    rnd = function(){ return df(1 + Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 28)); };
+    if (d <= 10 || d === 14 || d === 20 || d === 24) tip = 'Days 1–10, 14, 20 and 24 have special readings: よっか = 4th, ようか = 8th, はつか = 20th. ';
+    if (mo === 4 || mo === 7 || mo === 9) tip += '4月 しがつ · 7月 しちがつ · 9月 くがつ. ';
+  } else {
+    var dig = [];
+    for (i = 0; i < 7; i++) dig.push(Math.floor(Math.random() * 10));
+    var tf = function(a){ return a.slice(0, 3).join('') + '-' + a.slice(3).join(''); };
+    right = tf(dig);
+    reading = dig.slice(0, 3).map(function(x){ return LS_TEL[x]; }).join(' ') + ' の ' +
+              dig.slice(3).map(function(x){ return LS_TEL[x]; }).join(' ');
+    say = 'でんわばんごうは ' + reading + ' です。'; ask = 'What is the phone number?';
+    for (i = 0; i < 7; i++){
+      var al = LS_DIGCONF[dig[i]] || [];
+      for (var q2 = 0; q2 < al.length; q2++){ var c2 = dig.slice(); c2[i] = al[q2]; cands.push(tf(c2)); }
+    }
+    var sw = dig.slice(), j = 3 + Math.floor(Math.random() * 3), t2 = sw[j]; sw[j] = sw[j + 1]; sw[j + 1] = t2;
+    cands.push(tf(sw));
+    rnd = function(){ var r = dig.slice(); r[Math.floor(Math.random() * 7)] = Math.floor(Math.random() * 10); return tf(r); };
+    tip = 'Phone numbers are read digit by digit; the dash is read の. 4 is よん and 7 is なな here. ';
+  }
+  var opts = lsFill(right, cands, rnd);
+  var texts = shuffle(opts.slice());
+  return { type: 'num', kind: kind, ask: ask,
+    parts: [{ s: 'F', t: say }],
+    opts: texts.map(function(t){ return { text: t, ok: t === right }; }),
+    transcript: [['F', say]],
+    explain: 'You heard ' + reading + ' = ' + right + '. ' + tip };
+}
+
+/* ---------- building one question from LISTENING ---------- */
+var LS_NUMWORD = ['いち', 'に', 'さん'];
+
+function lsQuestionFrom(it){
+  var order = shuffle(it.opts.map(function(t, i){ return { text: t, ok: i === it.a }; }));
+  var q = { type: it.type, item: it, opts: order, explain: it.en, parts: [], transcript: [] };
+  var i;
+  if (it.type === 'task' || it.type === 'point'){
+    q.parts.push({ s: 'N', t: it.setup }, { s: 'N', t: it.q });
+    for (i = 0; i < it.lines.length; i++) q.parts.push({ s: it.lines[i][0], t: it.lines[i][1] });
+    q.parts.push({ s: 'N', t: it.q });
+    q.transcript = [['N', it.setup + it.q]].concat(it.lines);
+  } else {
+    var lead = it.type === 'utter' ? { s: 'N', t: it.sit } : { s: 'M', t: it.say };
+    q.parts.push(lead);
+    q.transcript.push([lead.s, lead.t]);
+    for (i = 0; i < order.length; i++){
+      q.parts.push({ s: 'N', t: LS_NUMWORD[i] }, { s: 'F', t: order[i].text });
+      q.transcript.push(['F', (i + 1) + '. ' + order[i].text]);
+    }
+  }
+  return q;
+}
+
+function lsPickItem(type){
+  var pool = [], i, seen = (state.listen && state.listen.seen) || {}, low = 1e9;
+  for (i = 0; i < LISTENING.length; i++){
+    if (LISTENING[i].type !== type) continue;
+    var n = seen[LISTENING[i].id] || 0;
+    if (n < low){ low = n; pool = [LISTENING[i]]; }
+    else if (n === low) pool.push(LISTENING[i]);
+  }
+  return pool.length ? pick(pool) : null;
+}
+
+function lsBuild(mode){
+  var type = mode === 'mix' ? pick(['task', 'point', 'utter', 'resp', 'num', 'num']) : mode;
+  if (type === 'num') return lsNumQuestion();
+  var it = lsPickItem(type);
+  return it ? lsQuestionFrom(it) : lsNumQuestion();
+}
+
+/* ---------- screen ---------- */
+var ls = { mode: null, q: null, locked: false, chosen: -1, n: 0, right: 0 };
+
+function lsState(){
+  if (!state.listen) state.listen = { right: 0, wrong: 0, by: {}, seen: {}, slow: false };
+  return state.listen;
+}
+
+function lsNoVoiceHTML(){
+  return '<div class="card" style="border-color:var(--accent)"><b>This needs a Japanese voice on your device</b>' +
+    '<p class="muted" style="margin:8px 0">Listening practice speaks Japanese aloud with your device’s built-in ' +
+    'voice. None was found. Install one, then reopen this page:</p>' +
+    '<p class="tiny"><b>Android:</b> Settings → Accessibility (or General management) → Text-to-speech → ' +
+    'Google Speech Services → Install voice data → Japanese.</p>' +
+    '<p class="tiny"><b>iPhone / iPad:</b> Settings → Accessibility → Spoken Content → Voices → Japanese.</p>' +
+    '<p class="tiny"><b>Windows:</b> Settings → Time &amp; language → Speech → Add voices → Japanese. ' +
+    'Microsoft Edge also has natural online Japanese voices built in, and they sound the best.</p>' +
+    '<p class="tiny"><b>Mac:</b> System Settings → Accessibility → Spoken Content → System voice → Manage voices → Japanese.</p></div>';
+}
+
+function screenListen(){
+  var st = lsState();
+  var h = '<h1>Listening practice <span class="jp muted" style="font-size:16px">聴解</span></h1>';
+  if (!jaVoices.length) return h + lsNoVoiceHTML();
+  if (!ls.q) return h + lsMenuHTML(st);
+  return h + lsQuestionHTML(st);
+}
+
+function lsMenuHTML(st){
+  var total = st.right + st.wrong;
+  var h = '<p class="muted">The four question types of the real N5 listening paper, spoken aloud. ' +
+          'Everything is shown as a transcript after you answer.</p>';
+  if (ls.n){
+    h += '<div class="card" style="border-color:var(--accent)"><b>Last set: ' + ls.right + ' / ' + ls.n +
+         '</b></div>';
+  }
+  for (var i = 0; i < LS_TYPES.length; i++){
+    var t = LS_TYPES[i], b = st.by[t.key] || { r: 0, w: 0 }, n = 0;
+    for (var k = 0; k < LISTENING.length; k++) if (LISTENING[k].type === t.key) n++;
+    h += '<button class="card" style="width:100%;text-align:left;cursor:pointer" data-act="ls-start" data-m="' + t.key + '">' +
+         '<div class="spread"><b class="jp">' + esc(t.jp) + '</b><span class="pill' + (b.r + b.w ? ' on' : '') + '">' +
+         (b.r + b.w ? Math.round(b.r / (b.r + b.w) * 100) + '%' : 'new') + '</span></div>' +
+         '<div style="font-weight:600;margin-top:4px">' + esc(t.label) + '</div>' +
+         '<div class="muted tiny">' + esc(t.hint) + (t.key === 'num' ? '' : ' · ' + n + ' conversations') + '</div></button>';
+  }
+  h += '<button class="btn btn-primary" style="width:100%" data-act="ls-start" data-m="mix">🔀 Mixed practice — all types</button>';
+  h += '<div class="setting" style="margin-top:10px"><label>Slower speech<div class="muted tiny">Start slow, ' +
+       'then switch it off — the real exam is at normal speed.</div></label>' + toggleLs(st.slow) + '</div>';
+  h += '<p class="tiny">All time: ' + st.right + ' right of ' + total + '. Voices are your device’s speech ' +
+       'synthesis: clear, but more robotic than the real recording.</p>';
+  return h;
+}
+
+function toggleLs(on){
+  return '<button class="switch" role="switch" aria-checked="' + (on ? 'true' : 'false') +
+         '" data-act="ls-slow"><i></i></button>';
+}
+
+function lsQuestionHTML(st){
+  var q = ls.q, t = null, i;
+  for (i = 0; i < LS_TYPES.length; i++) if (LS_TYPES[i].key === q.type) t = LS_TYPES[i];
+  var hidden = (q.type === 'utter' || q.type === 'resp');
+  var h = '<div class="spread"><span class="pill jp">' + esc(t.jp) + '</span>' +
+          '<span class="pill">' + ls.right + ' / ' + ls.n + '</span></div>';
+  h += '<div class="prompt" style="min-height:130px;margin-top:10px">';
+  if (q.type === 'task' || q.type === 'point'){
+    h += '<div class="prompt-label">Question — it is also spoken</div><div class="jp-sentence">' + esc(q.item.q) + '</div>';
+  } else if (q.type === 'utter'){
+    h += '<div class="prompt-label">Situation</div><div class="prompt-en-sm">' + esc(q.item.sitEn) + '</div>' +
+         '<div class="muted tiny">Listen to three phrases. Which one do you say?</div>';
+  } else if (q.type === 'resp'){
+    h += '<div class="prompt-label">Listen</div><div class="prompt-en-sm">Hear one line, then three replies.</div>' +
+         '<div class="muted tiny">Choose the best reply. Nothing is printed — just like the exam.</div>';
+  } else {
+    h += '<div class="prompt-label">Listen</div><div class="prompt-en-sm">' + esc(q.ask) + '</div>';
+  }
+  h += '</div>';
+  h += '<button class="btn btn-primary ls-play" data-act="ls-play">▶ ' + (ls.locked ? 'Play again' : 'Play') + '</button>';
+
+  h += '<div class="choices' + (hidden ? '' : choiceSize(q.opts)) + '" style="margin-top:12px">';
+  for (i = 0; i < q.opts.length; i++){
+    var o = q.opts[i], cls = 'choice' + (hidden ? ' big-num' : ' jp');
+    if (ls.locked){
+      if (o.ok) cls += ' correct';
+      else if (i === ls.chosen) cls += ' wrong';
+    }
+    h += '<button class="' + cls + '" data-act="ls-pick" data-i="' + i + '">' +
+         (hidden ? (i + 1) + (ls.locked ? '<span class="reveal">' + esc(o.text) + '</span>' : '')
+                 : '<span class="num">' + (i + 1) + '</span>' + esc(o.text)) + '</button>';
+  }
+  h += '</div>';
+
+  if (ls.locked){
+    var ok = q.opts[ls.chosen] && q.opts[ls.chosen].ok;
+    h += '<div class="feedback ' + (ok ? 'good' : 'bad') + '" style="margin-top:12px">' + (ok ? '✓ ' : '✗ ') +
+         esc(q.explain) + '</div>';
+    h += '<div class="card ls-tr"><div class="prompt-label">Transcript</div>';
+    for (i = 0; i < q.transcript.length; i++){
+      var sp = q.transcript[i][0];
+      h += '<div class="ln"><span class="sp">' + (sp === 'M' ? '男' : sp === 'F' ? '女' : '🔈') + '</span>' +
+           '<span class="jp">' + esc(q.transcript[i][1]) + '</span></div>';
+    }
+    h += '</div>';
+    h += '<div class="row"><button class="btn btn-primary" style="flex:2" data-act="ls-next">Next</button>' +
+         '<button class="btn btn-ghost" style="flex:1" data-act="ls-menu">Finish</button></div>';
+  } else {
+    h += '<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:12px" data-act="ls-menu">Back to menu</button>';
+  }
+  return h;
+}
+
+function lsNext(){
+  ls.q = lsBuild(ls.mode);
+  ls.locked = false; ls.chosen = -1;
+  render('listen');
+  speakSeq(ls.q.parts);                 /* inside the click, so audio is allowed */
+}
+
+function onListenAction(act, el){
+  var st = lsState();
+  if (act === 'ls-start'){ ls.mode = el.getAttribute('data-m'); ls.n = 0; ls.right = 0; lsNext(); return true; }
+  if (act === 'ls-play'){ if (ls.q) speakSeq(ls.q.parts); return true; }
+  if (act === 'ls-next'){ lsNext(); return true; }
+  if (act === 'ls-menu'){ lsStop(); ls.q = null; render('listen'); return true; }
+  if (act === 'ls-slow'){ st.slow = !st.slow; saveState(); render('listen'); return true; }
+  if (act === 'ls-pick'){
+    if (!ls.q || ls.locked) return true;
+    ls.chosen = parseInt(el.getAttribute('data-i'), 10);
+    ls.locked = true;
+    lsStop();
+    var ok = ls.q.opts[ls.chosen] && ls.q.opts[ls.chosen].ok;
+    var b = st.by[ls.q.type] || (st.by[ls.q.type] = { r: 0, w: 0 });
+    if (ok){ st.right++; b.r++; ls.right++; sndOk(); } else { st.wrong++; b.w++; sndNo(); }
+    ls.n++;
+    if (ls.q.item) st.seen[ls.q.item.id] = (st.seen[ls.q.item.id] || 0) + 1;
+    markStudiedToday();
+    saveState();
+    render('listen');
+    return true;
+  }
+  return false;
+}
+
+/* voices often arrive a moment after the page loads — refresh the screen */
+if (window.speechSynthesis && window.speechSynthesis.addEventListener){
+  try {
+    window.speechSynthesis.addEventListener('voiceschanged', function(){
+      initVoices();
+      if (screenName === 'listen') render('listen');
+    });
+  } catch (e){}
+}
+
+/* ---------- self test ---------- */
+function listeningSelfTest(add){
+  var bad = [], ids = {}, i, it, need;
+  for (i = 0; i < LISTENING.length; i++){
+    it = LISTENING[i];
+    if (ids[it.id]) bad.push('duplicate id ' + it.id); ids[it.id] = 1;
+    need = (it.type === 'task' || it.type === 'point') ? 4 : 3;
+    if (!it.opts || it.opts.length !== need) bad.push(it.id + ' needs ' + need + ' options');
+    if (!(it.a >= 0 && it.a < need)) bad.push(it.id + ' answer index');
+    if (!it.en) bad.push(it.id + ' no explanation');
+    if ((it.type === 'task' || it.type === 'point') && (!it.setup || !it.q || !it.lines || !it.lines.length)) bad.push(it.id + ' incomplete');
+    if (it.type === 'utter' && (!it.sit || !it.sitEn)) bad.push(it.id + ' incomplete');
+    if (it.type === 'resp' && !it.say) bad.push(it.id + ' incomplete');
+    var s = {};
+    for (var k = 0; k < (it.opts || []).length; k++){ if (s[it.opts[k]]) bad.push(it.id + ' repeats an option'); s[it.opts[k]] = 1; }
+  }
+  add('LISTENING entries are complete and answerable', bad.length === 0, bad.join(' · ') ||
+      LISTENING.length + ' conversations');
+
+  /* readings against a hand-written table */
+  var want = [[lsNum(300), 'さんびゃく'], [lsNum(600), 'ろっぴゃく'], [lsNum(800), 'はっぴゃく'],
+    [lsNum(3000), 'さんぜん'], [lsNum(8000), 'はっせん'], [lsNum(1350), 'せんさんびゃくごじゅう'],
+    [lsNum(10000), 'いちまん'], [lsTime(4, 0), 'よじ'], [lsTime(7, 30), 'しちじ はん'],
+    [lsTime(9, 10), 'くじ じゅっぷん'], [lsTime(1, 45), 'いちじ よんじゅうごふん'], [lsTime(12, 20), 'じゅうにじ にじゅっぷん'],
+    [LS_DAY[4], 'よっか'], [LS_DAY[8], 'ようか'], [LS_DAY[14], 'じゅうよっか'], [LS_DAY[20], 'はつか'],
+    [LS_DAY[31], 'さんじゅういちにち'], [LS_MON[4], 'しがつ'], [LS_MON[9], 'くがつ']];
+  bad = [];
+  for (i = 0; i < want.length; i++) if (want[i][0] !== want[i][1]) bad.push(want[i][0] + ' (want ' + want[i][1] + ')');
+  add('Number, time and date readings match hand-written answers', bad.length === 0, bad.join(' · '));
+
+  /* the generated drill must always be answerable */
+  bad = [];
+  for (i = 0; i < 300; i++){
+    var q = lsNumQuestion(), right = 0, seen = {};
+    for (var j = 0; j < q.opts.length; j++){ if (q.opts[j].ok) right++; if (seen[q.opts[j].text]) bad.push(q.kind + ' duplicate'); seen[q.opts[j].text] = 1; }
+    if (q.opts.length !== 4 || right !== 1) bad.push(q.kind + ' has ' + q.opts.length + ' options, ' + right + ' right');
+    if (!q.parts.length || !q.parts[0].t) bad.push(q.kind + ' says nothing');
+  }
+  add('Numbers drill: 300 generated questions, each with 4 options and one answer',
+      bad.length === 0, bad.slice(0, 5).join(' · '));
+}
+
+NM.listen = { build: lsBuild, num: lsNum, time: lsTime, day: function(d){ return LS_DAY[d]; },
+              month: function(m){ return LS_MON[m]; } };
 
 /* @@CODE@@ — new functions go above this marker; they are hoisted, so the
    engine's `typeof fn === 'function'` hooks pick them up automatically */

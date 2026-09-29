@@ -11,7 +11,8 @@ cannot read any Japanese yet. No dependencies, no build step, no network.
 |---|---|
 | Kana | 222 — both scripts, including dakuten, yōon and extended katakana |
 | Kanji | 99 — meaning, on'yomi, kun'yomi, stroke count, common words |
-| Vocabulary | 729 words in 23 themes |
+| Vocabulary | 735 words in 23 themes |
+| Listening | 35 conversations in the 4 real N5 formats + unlimited numbers/times/dates drill, with audio |
 | Grammar | 96 points, each with formation rules, examples and a drill |
 | Mock exam | Full N5 paper, 43 questions, generated fresh every time |
 
@@ -45,15 +46,16 @@ none, every audio control hides itself rather than showing a broken button.
 | `Nihongo-N5.html` | the entire app — data, styling, logic, in one file |
 | `index.html` | a redirect, so a hosted copy works from the bare address |
 | `sw.js` | optional service worker: offline support for hosted copies only |
-| `HANDOFF.md` | status, code map, data formats, decisions, known gaps |
-| `BUILD-PROMPT.md` | the original specification |
+
+The code map, data formats and extension points are documented in the comment block at
+the top of `Nihongo-N5.html`.
 
 ## Checking that it is healthy
 
 Open the app, press F12, and run:
 
 ```js
-NM.selfTest()   // -> {pass: true, …}  39 checks
+NM.selfTest()   // -> {pass: true, …}  42 checks
 NM.stats()
 ```
 
@@ -65,8 +67,8 @@ screen.
 
 ## Honest limits
 
-No listening section — browser speech synthesis is not close enough to real recorded
-Japanese to practise against, so the exam's 180-point total cannot be completed and the
-result screen says so explicitly. Tracing is self-marked; the app cannot check stroke
+Listening practice uses the device's speech synthesis — clear, but more robotic than the
+real recording — so the mock exam itself still has no listening section, its 180-point
+total cannot be completed, and the result screen says so explicitly. Tracing is self-marked; the app cannot check stroke
 order. The full list of deliberate omissions is in the app itself under Settings, and in
 `HANDOFF.md`.

@@ -10,7 +10,7 @@
    nothing here ever runs. Cache-first, with a quiet refresh in the background
    so a new version is picked up on the visit after it is published.
    =========================================================================== */
-var CACHE = 'nihongo-n5-v1';
+var CACHE = 'nihongo-n5-v2';   /* bump on every release so phones pick it up */
 
 self.addEventListener('install', function(){
   self.skipWaiting();
